@@ -50,8 +50,8 @@ const sidebarGroups = [
 		title: "Pages",
 		items: [
 			{
-				title: "Users",
-				href: "/dashboard/users",
+				title: "Categories",
+				href: "/dashboard/category",
 				icon: Users,
 				badge: "12",
 			},

@@ -11,8 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, Filter, MoreHorizontal, Trash, Edit } from "lucide-react";
-import Link from "next/link";
+import { Search, Plus, Filter, Trash, Edit } from "lucide-react";
 import { useCategories } from "@/lib/query/category.query";
 import { useDeleteCategory } from "@/lib/query/category.mutation";
 import { useState } from "react";
@@ -22,7 +21,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { AddCategoryForm } from "@/components/category";
 

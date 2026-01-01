@@ -56,6 +56,12 @@ const sidebarGroups = [
 				badge: "12",
 			},
 			{
+				title: "Users",
+				href: "/dashboard/users",
+				icon: Users,
+				badge: "12",
+			},
+			{
 				title: "Projects",
 				href: "/dashboard/projects",
 				icon: FolderKanban,

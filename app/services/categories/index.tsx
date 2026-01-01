@@ -2,7 +2,7 @@ export const BASE_URL = 'https://ramik-backend.onrender.com';
 
 // Your JWT token
 export const JWT_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsImlhdCI6MTc2NzI2NjYzNSwiZXhwIjoxNzY3MzUzMDM1fQ.MCr9IYF2jLibkHGZJyoqLDLTTCUo5q-KcwtCfLzKqdY";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsImlhdCI6MTc2NzI3NjYyNSwiZXhwIjoxNzY3MzYzMDI1fQ.JxqzDPQNSxjgx9LCvJXRn5XhFyjIDn5qcy56kT-NpaE";
 
 export async function createCategory(category: string) {
   const res = await fetch(`${BASE_URL}/api/categories`, {

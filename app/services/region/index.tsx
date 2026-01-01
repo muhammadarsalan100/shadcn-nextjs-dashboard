@@ -1,12 +1,13 @@
 import { BASE_URL, JWT_TOKEN } from "../categories";
 
+// Get all regions
 export type Region = {
   id: number;
   name: string;
   pricePercentage: number;
+  active: boolean;
 };
 
-// Get all regions
 export async function getRegions(): Promise<Region[]> {
   const res = await fetch(`${BASE_URL}/api/regions/admin`, {
     headers: {
@@ -15,8 +16,17 @@ export async function getRegions(): Promise<Region[]> {
     },
   });
   if (!res.ok) throw new Error("Failed to fetch regions");
-  const json = await res.json();
-  return json.data as Region[];
+
+  const json: {
+    status: string;
+    results: number;
+    data: { regions: { id: number; name: string; pricePercentage: string; active: boolean }[] };
+  } = await res.json();
+
+  return json.data.regions.map((r) => ({
+    ...r,
+    pricePercentage: parseFloat(r.pricePercentage),
+  }));
 }
 
 // Create region

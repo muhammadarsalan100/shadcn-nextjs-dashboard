@@ -132,7 +132,7 @@ export default function CategoriesPage() {
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="ghost"
+          variant="destructive"
                         size="icon"
                         onClick={() => handleDeleteClick(cat.id)}
                       >

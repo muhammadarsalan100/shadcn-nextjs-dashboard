@@ -8,15 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Search, Plus, Filter } from "lucide-react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useRegions } from "@/lib/query/region/region.mutation";
-import { useCreateRegion, useDeleteRegion, useUpdateRegion } from "@/lib/query/region/region.query";
+import { useRegions } from "@/lib/query/region/region.query";
+import { useCreateRegion, useDeleteRegion, useUpdateRegion } from "@/lib/query/region/region.mutation";
 import { Region } from "@/app/services/region";
 import { DataTable } from "@/components/shared/data-table";
 import { regionColumns } from "@/components/regions/columns";
+import { Switch } from "@/components/ui/switch";
 
 type RegionFormValues = {
   name: string;
+  currencyCode: string;
   pricePercentage: number;
+  conversionRate: number;
+  active: boolean;
 };
 
 export default function RegionsPage() {
@@ -32,20 +36,42 @@ export default function RegionsPage() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<RegionFormValues>({
-    defaultValues: { name: "", pricePercentage: 0 },
+    defaultValues: { 
+      name: "", 
+      currencyCode: "",
+      pricePercentage: 0, 
+      conversionRate: 1,
+      active: true 
+    },
   });
+
+  const activeValue = watch("active");
 
   const handleEditClick = (region: Region) => {
     setCurrentRegion(region);
-    reset({ name: region.name, pricePercentage: region.pricePercentage });
+    reset({ 
+      name: region.name, 
+      currencyCode: region.currencyCode,
+      pricePercentage: region.pricePercentage,
+      conversionRate: region.conversionRate,
+      active: region.active
+    });
     setOpenForm(true);
   };
 
   const handleAddClick = () => {
     setCurrentRegion(null);
-    reset({ name: "", pricePercentage: 0 });
+    reset({ 
+      name: "", 
+      currencyCode: "",
+      pricePercentage: 0, 
+      conversionRate: 1,
+      active: true 
+    });
     setOpenForm(true);
   };
 
@@ -53,12 +79,29 @@ export default function RegionsPage() {
     if (currentRegion) {
       // Update
       updateMutation.mutate(
-        { id: currentRegion.id, data },
+        { 
+          id: currentRegion.id, 
+          data: {
+            name: data.name,
+            currencyCode: data.currencyCode,
+            pricePercentage: Number(data.pricePercentage),
+            conversionRate: Number(data.conversionRate),
+            active: data.active
+          }
+        },
         { onSuccess: () => setOpenForm(false) }
       );
     } else {
       // Create
-      createMutation.mutate(data, { onSuccess: () => setOpenForm(false) });
+      createMutation.mutate(
+        {
+          name: data.name,
+          currencyCode: data.currencyCode,
+          pricePercentage: Number(data.pricePercentage),
+          conversionRate: Number(data.conversionRate)
+        }, 
+        { onSuccess: () => setOpenForm(false) }
+      );
     }
   };
 
@@ -118,9 +161,26 @@ export default function RegionsPage() {
               <label className="block font-medium">Region Name</label>
               <Input
                 {...register("name", { required: "Region name is required" })}
-                placeholder="Region Name"
+                placeholder="e.g. Pakistan"
               />
               {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block font-medium">Currency Code</label>
+              <Input
+                {...register("currencyCode", { 
+                  required: "Currency code is required",
+                  pattern: {
+                    value: /^[A-Z]{3}$/,
+                    message: "Must be a 3-letter ISO currency code (e.g. PKR, USD)"
+                  }
+                })}
+                placeholder="e.g. PKR"
+                className="uppercase"
+                maxLength={3}
+              />
+              {errors.currencyCode && <p className="text-red-500 text-sm">{errors.currencyCode.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -128,13 +188,46 @@ export default function RegionsPage() {
               <Input
                 type="number"
                 step="0.01"
-                {...register("pricePercentage", { required: "Price percentage is required" })}
-                placeholder="Price Percentage"
+                {...register("pricePercentage", { 
+                  required: "Price percentage is required",
+                  valueAsNumber: true
+                })}
+                placeholder="e.g. 10.00"
               />
               {errors.pricePercentage && (
                 <p className="text-red-500 text-sm">{errors.pricePercentage.message}</p>
               )}
             </div>
+
+            <div className="space-y-2">
+              <label className="block font-medium">Conversion Rate</label>
+              <Input
+                type="number"
+                step="0.01"
+                {...register("conversionRate", { 
+                  required: "Conversion rate is required",
+                  valueAsNumber: true,
+                  min: {
+                    value: 1,
+                    message: "Conversion rate must be at least 1"
+                  }
+                })}
+                placeholder="e.g. 1.00"
+              />
+              {errors.conversionRate && (
+                <p className="text-red-500 text-sm">{errors.conversionRate.message}</p>
+              )}
+            </div>
+
+            {currentRegion && (
+              <div className="flex items-center justify-between">
+                <label className="font-medium">Active</label>
+                <Switch
+                  checked={activeValue}
+                  onCheckedChange={(checked) => setValue("active", checked)}
+                />
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 mt-2">
               <Button

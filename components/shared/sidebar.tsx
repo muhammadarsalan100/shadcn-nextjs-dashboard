@@ -19,6 +19,9 @@ import {
 	HelpCircle,
 	LogIn,
 	AlertCircle,
+	Languages,
+	Package,
+	Ruler,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -50,6 +53,18 @@ const sidebarGroups = [
 		title: "Pages",
 		items: [
 			{
+				title: "Products",
+				href: "/dashboard/products",
+				icon: Package,
+				badge: "New",
+			},
+			{
+				title: "Product Sizes",
+				href: "/dashboard/product-sizes",
+				icon: Ruler,
+				badge: null,
+			},
+			{
 				title: "Categories",
 				href: "/dashboard/category",
 				icon: Users,
@@ -60,6 +75,12 @@ const sidebarGroups = [
 				href: "/dashboard/regions",
 				icon: FolderKanban,
 				badge: "12",
+			},
+			{
+				title: "Languages",
+				href: "/dashboard/languages",
+				icon: Languages,
+				badge: null,
 			},
 			{
 				title: "Users",

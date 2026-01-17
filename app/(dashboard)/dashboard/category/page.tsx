@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AddCategoryForm } from "@/components/category";
+import type { Category } from "@/app/services/categories";
 
 export default function CategoriesPage() {
   const { data: categories, isLoading, isError } = useCategories();
@@ -32,7 +33,7 @@ export default function CategoriesPage() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const [openForm, setOpenForm] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<{ id: number; name: string } | null>(null);
+  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
 
   // Delete handlers
   const handleDeleteClick = (id: number) => {
@@ -49,7 +50,7 @@ export default function CategoriesPage() {
   };
 
   // Edit handler
-  const handleEditClick = (cat: { id: number; name: string }) => {
+  const handleEditClick = (cat: Category) => {
     setCurrentCategory(cat);
     setOpenForm(true);
   };
@@ -100,20 +101,21 @@ export default function CategoriesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Category Name</TableHead>
+                <TableHead>Language</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-center">
+                  <TableCell colSpan={3} className="text-center">
                     Loading...
                   </TableCell>
                 </TableRow>
               )}
               {isError && (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-center text-red-500">
+                  <TableCell colSpan={3} className="text-center text-red-500">
                     Failed to load categories
                   </TableCell>
                 </TableRow>
@@ -123,6 +125,9 @@ export default function CategoriesPage() {
                 categories?.map((cat) => (
                   <TableRow key={cat.id}>
                     <TableCell>{cat.name}</TableCell>
+                    <TableCell>
+                      {cat.language?.name} ({cat.language?.code})
+                    </TableCell>
                     <TableCell className="text-right flex justify-end gap-2">
                       <Button
                         variant="ghost"
@@ -132,7 +137,7 @@ export default function CategoriesPage() {
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
-          variant="destructive"
+                        variant="destructive"
                         size="icon"
                         onClick={() => handleDeleteClick(cat.id)}
                       >
@@ -153,7 +158,7 @@ export default function CategoriesPage() {
             <DialogTitle>{currentCategory?.id ? "Edit Category" : "Add Category"}</DialogTitle>
           </DialogHeader>
           <AddCategoryForm
-            categoryToEdit={currentCategory?.id ? currentCategory : undefined}
+            categoryToEdit={currentCategory ?? undefined}
             onClose={() => setOpenForm(false)}
           />
         </DialogContent>

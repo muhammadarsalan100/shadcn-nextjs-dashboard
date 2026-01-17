@@ -1,7 +1,7 @@
 "use client";
 
-
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Edit, Trash } from "lucide-react";
 import { UseMutationResult } from "@tanstack/react-query";
 import { Region } from "@/app/services/region";
@@ -14,7 +14,18 @@ export const regionColumns = (
   onEditClick: (region: Region) => void
 ): Column<Region>[] => [
   { header: "Name", accessorKey: "name" },
+  { header: "Currency", accessorKey: "currencyCode" },
   { header: "Price %", accessorKey: "pricePercentage" },
+  { header: "Conversion Rate", accessorKey: "conversionRate" },
+  {
+    header: "Status",
+    accessorKey: "active",
+    cell: (region: Region) => (
+      <Badge variant={region.active ? "default" : "secondary"}>
+        {region.active ? "Active" : "Inactive"}
+      </Badge>
+    ),
+  },
   {
     header: "Actions",
     className: "text-right",

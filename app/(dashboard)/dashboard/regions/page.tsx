@@ -151,7 +151,7 @@ export default function RegionsPage() {
 
       {/* Add / Edit Dialog */}
       <Dialog open={openForm} onOpenChange={setOpenForm}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{currentRegion ? "Edit Region" : "Add Region"}</DialogTitle>
           </DialogHeader>

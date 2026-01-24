@@ -153,7 +153,7 @@ export default function CategoriesPage() {
 
       {/* Add / Edit Dialog */}
       <Dialog open={openForm} onOpenChange={setOpenForm}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{currentCategory?.id ? "Edit Category" : "Add Category"}</DialogTitle>
           </DialogHeader>

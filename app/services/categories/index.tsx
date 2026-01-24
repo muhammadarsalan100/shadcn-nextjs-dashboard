@@ -1,8 +1,7 @@
-export const BASE_URL = 'https://ramik-backend.onrender.com';
+import { apiClientJson } from "@/lib/api-client";
 
-// Your JWT token
-export const JWT_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsImlhdCI6MTc2ODY0MDIzOSwiZXhwIjoxNzY4NzI2NjM5fQ.mlDXUVjSXgHrXRlXBrxNAx8_XH2amwZLh_1h-xdMxw8";
+// Re-export BASE_URL for backward compatibility
+export { BASE_URL } from "@/lib/auth";
 
 // Category types
 export type CategoryLanguage = {
@@ -29,81 +28,35 @@ export type UpdateCategoryInput = {
 
 // Create category
 export async function createCategory(data: CreateCategoryInput): Promise<Category> {
-  const res = await fetch(`${BASE_URL}/api/categories`, {
+  const json = await apiClientJson<{ data: Category }>("/api/categories", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${JWT_TOKEN}`,
-    },
     body: JSON.stringify(data),
   });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Failed to create category");
-  }
-
-  const json = await res.json();
   return json.data;
 }
 
 // Get all categories (with optional language filter)
 export async function getCategories(lang?: string): Promise<Category[]> {
   const url = lang 
-    ? `${BASE_URL}/api/categories?lang=${encodeURIComponent(lang)}`
-    : `${BASE_URL}/api/categories`;
+    ? `/api/categories?lang=${encodeURIComponent(lang)}`
+    : `/api/categories`;
 
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${JWT_TOKEN}`,
-    },
-  });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Failed to fetch categories");
-  }
-
-  const json = await res.json();
+  const json = await apiClientJson<{ data: Category[] }>(url);
   return json.data;
 }
 
 // Delete category
 export async function deleteCategory(id: number) {
-  const res = await fetch(`${BASE_URL}/api/categories/${id}`, {
+  return apiClientJson(`/api/categories/${id}`, {
     method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${JWT_TOKEN}`,
-    },
   });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Failed to delete category");
-  }
-
-  return res.json();
 }
 
 // Update category
 export async function updateCategory(id: number, data: UpdateCategoryInput): Promise<Category> {
-  const res = await fetch(`${BASE_URL}/api/categories/${id}`, {
+  const json = await apiClientJson<{ data: Category }>(`/api/categories/${id}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${JWT_TOKEN}`,
-    },
     body: JSON.stringify(data),
   });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Failed to update category");
-  }
-
-  const json = await res.json();
   return json.data;
 }

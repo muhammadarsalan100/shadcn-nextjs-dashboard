@@ -68,7 +68,7 @@ export function AddCategoryForm({ categoryToEdit, onClose }: AddCategoryFormProp
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3 max-w-md">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
       <div>
         <Input
           placeholder="Category name"

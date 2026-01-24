@@ -1,4 +1,5 @@
-import { BASE_URL, JWT_TOKEN } from "../categories";
+import { apiClientJson } from "@/lib/api-client";
+import { BASE_URL } from "@/lib/auth";
 
 // Cloudinary configuration
 const CLOUDINARY_CLOUD_NAME = "di0opppiq";
@@ -102,21 +103,10 @@ export async function uploadMultipleToCloudinary(files: File[]): Promise<ImageDa
 
 // Create product
 export async function createProduct(data: CreateProductInput): Promise<CreateProductResponse> {
-  const res = await fetch(`${BASE_URL}/api/products`, {
+  return apiClientJson<CreateProductResponse>("/api/products", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${JWT_TOKEN}`,
-    },
     body: JSON.stringify(data),
   });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Failed to create product");
-  }
-
-  return res.json();
 }
 
 // Product type from admin endpoint
@@ -139,20 +129,7 @@ export type Product = {
 
 // Get all products (admin endpoint - returns English translations, ordered by newest)
 export async function getProducts(): Promise<Product[]> {
-  const res = await fetch(`${BASE_URL}/api/products/admin`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${JWT_TOKEN}`,
-    },
-  });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Failed to fetch products");
-  }
-
-  const json = await res.json();
+  const json = await apiClientJson<{ data: Product[] }>("/api/products/admin");
   return json.data;
 }
 
@@ -196,39 +173,15 @@ export type ProductDetails = {
 
 // Get single product by ID (admin endpoint with full details)
 export async function getProduct(id: number): Promise<ProductDetails> {
-  const res = await fetch(`${BASE_URL}/api/products/admin/${id}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${JWT_TOKEN}`,
-    },
-  });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Failed to fetch product");
-  }
-
-  const json = await res.json();
+  const json = await apiClientJson<{ data: ProductDetails }>(`/api/products/admin/${id}`);
   return json.data;
 }
 
 // Delete product
 export async function deleteProduct(id: number): Promise<{ message: string }> {
-  const res = await fetch(`${BASE_URL}/api/products/${id}`, {
+  return apiClientJson<{ message: string }>(`/api/products/${id}`, {
     method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${JWT_TOKEN}`,
-    },
   });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Failed to delete product");
-  }
-
-  return res.json();
 }
 
 // Update product input type
@@ -248,20 +201,9 @@ export type UpdateProductInput = {
 
 // Update product
 export async function updateProduct(id: number, data: UpdateProductInput): Promise<Product> {
-  const res = await fetch(`${BASE_URL}/api/products/${id}`, {
+  const json = await apiClientJson<{ data: { product: Product } }>(`/api/products/${id}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${JWT_TOKEN}`,
-    },
     body: JSON.stringify(data),
   });
-
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error?.message || "Failed to update product");
-  }
-
-  const json = await res.json();
   return json.data.product;
 }

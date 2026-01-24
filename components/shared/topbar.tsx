@@ -13,10 +13,32 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppSwitcher } from "./app-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { getUser, logout } from "@/lib/auth";
+import { useEffect, useState } from "react";
+import type { User } from "@/lib/auth";
 
 
 
 export function Topbar() {
+	const [user, setUser] = useState<User | null>(null);
+
+	useEffect(() => {
+		setUser(getUser());
+	}, []);
+
+	const handleLogout = () => {
+		logout();
+	};
+
+	const getUserInitials = (name: string) => {
+		return name
+			.split(" ")
+			.map((n) => n[0])
+			.join("")
+			.toUpperCase()
+			.slice(0, 2);
+	};
+
 	return (
 		<div className="flex h-16 items-center justify-between border-b px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
 			{/* Search */}
@@ -60,9 +82,9 @@ export function Topbar() {
 							className="relative h-9 w-9 rounded-full hover:bg-muted transition-colors"
 						>
 							<Avatar className="h-8 w-8 ring-2 ring-background">
-								<AvatarImage src="/avatar.png" alt="User" />
+								<AvatarImage src="/avatar.png" alt={user?.name || "User"} />
 								<AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-									UN
+									{user?.name ? getUserInitials(user.name) : "AD"}
 								</AvatarFallback>
 							</Avatar>
 						</Button>
@@ -71,16 +93,23 @@ export function Topbar() {
 						<DropdownMenuLabel className="font-normal p-3">
 							<div className="flex items-center gap-3">
 								<Avatar className="h-10 w-10">
-									<AvatarImage src="/avatar.png" alt="User" />
+									<AvatarImage src="/avatar.png" alt={user?.name || "User"} />
 									<AvatarFallback className="bg-primary text-primary-foreground">
-										UN
+										{user?.name ? getUserInitials(user.name) : "AD"}
 									</AvatarFallback>
 								</Avatar>
 								<div className="flex flex-col space-y-1">
-									<p className="text-sm font-medium leading-none">John Doe</p>
-									<p className="text-xs leading-none text-muted-foreground">
-										john.doe@example.com
+									<p className="text-sm font-medium leading-none">
+										{user?.name || "Admin"}
 									</p>
+									<p className="text-xs leading-none text-muted-foreground">
+										{user?.email || "admin@example.com"}
+									</p>
+									{user?.role && (
+										<p className="text-xs leading-none text-primary font-semibold mt-1">
+											{user.role.toUpperCase()}
+										</p>
+									)}
 								</div>
 							</div>
 						</DropdownMenuLabel>
@@ -91,11 +120,11 @@ export function Topbar() {
 						<DropdownMenuItem className="p-3 cursor-pointer hover:bg-muted rounded-md transition-colors">
 							<span className="flex items-center gap-2">⚙️ Settings</span>
 						</DropdownMenuItem>
-						<DropdownMenuItem className="p-3 cursor-pointer hover:bg-muted rounded-md transition-colors">
-							<span className="flex items-center gap-2">💳 Billing</span>
-						</DropdownMenuItem>
 						<DropdownMenuSeparator className="my-2" />
-						<DropdownMenuItem className="p-3 cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors">
+						<DropdownMenuItem
+							onClick={handleLogout}
+							className="p-3 cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors"
+						>
 							<span className="flex items-center gap-2">🚪 Log out</span>
 						</DropdownMenuItem>
 					</DropdownMenuContent>

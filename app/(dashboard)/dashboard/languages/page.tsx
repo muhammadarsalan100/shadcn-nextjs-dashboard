@@ -127,7 +127,7 @@ export default function LanguagesPage() {
 
       {/* Add / Edit Dialog */}
       <Dialog open={openForm} onOpenChange={setOpenForm}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{currentLanguage ? "Edit Language" : "Add Language"}</DialogTitle>
           </DialogHeader>

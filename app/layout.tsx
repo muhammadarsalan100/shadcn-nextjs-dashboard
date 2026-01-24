@@ -8,9 +8,9 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-	title: "Modern Dashboard Template - Next.js 14 & shadcn/ui",
+	title: "Admin Dashboard - Next.js 14 & shadcn/ui",
 	description:
-		"A beautiful, responsive dashboard template built with Next.js 14, shadcn/ui, and Tailwind CSS. Ready-to-use admin panel with modern UI components.",
+		"Admin dashboard panel built with Next.js 14, shadcn/ui, and Tailwind CSS. Manage your application with modern UI components.",
 	keywords: [
 		"dashboard template",
 		"admin panel",

@@ -11,17 +11,8 @@ import {
 	FolderKanban,
 	ChevronLeft,
 	ChevronRight,
-	FileText,
-	Calendar,
-	Database,
-	MessageSquare,
-	Shield,
-	HelpCircle,
-	LogIn,
-	AlertCircle,
 	Languages,
 	Package,
-	Ruler,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -59,12 +50,6 @@ const sidebarGroups = [
 				badge: "New",
 			},
 			{
-				title: "Product Sizes",
-				href: "/dashboard/product-sizes",
-				icon: Ruler,
-				badge: null,
-			},
-			{
 				title: "Categories",
 				href: "/dashboard/category",
 				icon: Users,
@@ -87,65 +72,6 @@ const sidebarGroups = [
 				href: "/dashboard/users",
 				icon: Users,
 				badge: "12",
-			},
-			{
-				title: "Projects",
-				href: "/dashboard/projects",
-				icon: FolderKanban,
-				badge: null,
-			},
-			{
-				title: "Documents",
-				href: "/dashboard/documents",
-				icon: FileText,
-				badge: null,
-			},
-			{
-				title: "Calendar",
-				href: "/dashboard/calendar",
-				icon: Calendar,
-				badge: "3",
-			},
-			{
-				title: "Auth Pages",
-				href: "/dashboard/auth",
-				icon: LogIn,
-				badge: null,
-			},
-			{
-				title: "Error Pages",
-				href: "/dashboard/errors",
-				icon: AlertCircle,
-				badge: null,
-			},
-		],
-	},
-	{
-		title: "Others",
-		items: [
-			{
-				title: "Messages",
-				href: "/dashboard/messages",
-				icon: MessageSquare,
-				badge: "5",
-			},
-			{
-				title: "Database",
-				href: "/dashboard/database",
-				icon: Database,
-				badge: null,
-			},
-			{
-				title: "Security",
-				href: "/dashboard/security",
-				icon: Shield,
-				badge: "!",
-			},
-			{
-				title: "Help",
-				href: "/dashboard/help",
-				icon: HelpCircle,
-				badge: null,
 			},
 		],
 	},

@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +27,7 @@ import {
 } from "@/components/ui/card";
 import { LogIn, Mail, Lock } from "lucide-react";
 import Link from "next/link";
+import { login } from "@/lib/auth";
 
 const formSchema = z.object({
 	email: z.string().email({
@@ -36,6 +39,9 @@ const formSchema = z.object({
 });
 
 export default function LoginPage() {
+	const router = useRouter();
+	const [isLoading, setIsLoading] = useState(false);
+	
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -44,11 +50,27 @@ export default function LoginPage() {
 		},
 	});
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values);
-		toast.success("Login successful!", {
-			description: "Welcome back! You have been logged in successfully.",
-		});
+	async function onSubmit(values: z.infer<typeof formSchema>) {
+		setIsLoading(true);
+		try {
+			const response = await login({
+				email: values.email,
+				password: values.password,
+			});
+			
+			toast.success("Login successful!", {
+				description: `Welcome back, ${response.data.user.name}!`,
+			});
+			
+			// Redirect to dashboard
+			router.push("/dashboard");
+		} catch (error) {
+			toast.error("Login failed", {
+				description: error instanceof Error ? error.message : "Invalid email or password",
+			});
+		} finally {
+			setIsLoading(false);
+		}
 	}
 
 	return (
@@ -104,8 +126,8 @@ export default function LoginPage() {
 								</FormItem>
 							)}
 						/>
-						<Button type="submit" className="w-full">
-							Sign In
+						<Button type="submit" className="w-full" disabled={isLoading}>
+							{isLoading ? "Signing in..." : "Sign In"}
 						</Button>
 					</form>
 				</Form>

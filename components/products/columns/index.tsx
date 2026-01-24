@@ -15,13 +15,22 @@ export const productColumns = (
     header: "Image",
     className: "w-[70px]",
     cell: (product: Product) => (
-      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-amber-100 to-pink-100 dark:from-amber-900/20 dark:to-pink-900/20 flex items-center justify-center">
+      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-amber-100 to-pink-100 dark:from-amber-900/20 dark:to-pink-900/20 flex items-center justify-center relative">
         {product.thumbnailUrl ? (
-          <img
-            src={product.thumbnailUrl}
-            alt={product.title || "Product"}
-            className="w-full h-full object-cover"
-          />
+          <>
+            <img
+              src={product.thumbnailUrl}
+              alt={product.title || "Product"}
+              className={`w-full h-full object-cover ${!product.inStock ? "blur-sm opacity-60" : ""}`}
+            />
+            {!product.inStock && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                <Badge variant="destructive" className="text-xs">
+                  Out of Stock
+                </Badge>
+              </div>
+            )}
+          </>
         ) : (
           <Package className="h-5 w-5 text-amber-500/50" />
         )}

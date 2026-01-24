@@ -39,7 +39,7 @@ import { useLanguages } from "@/lib/query/languages/languages.query";
 import { useCategories } from "@/lib/query/category.query";
 import { useCreateProduct, useUpdateProduct, useDeleteProduct } from "@/lib/query/products/products.mutation";
 import { useProducts, useProduct } from "@/lib/query/products/products.query";
-import { useCreateProductSize, useDeleteProductSize } from "@/lib/query/product-sizes/product-sizes.mutation";
+import { useCreateProductSize, useUpdateProductSize, useDeleteProductSize } from "@/lib/query/product-sizes/product-sizes.mutation";
 import { useCreateProductTranslation, useUpdateProductTranslation, useDeleteProductTranslation } from "@/lib/query/product-translations/product-translations.mutation";
 import {
   uploadToCloudinary,
@@ -103,6 +103,7 @@ export default function ProductsPage() {
   
   // Size mutations
   const createSizeMutation = useCreateProductSize();
+  const updateSizeMutation = useUpdateProductSize();
   const deleteSizeMutation = useDeleteProductSize();
 
   // Translation mutations
@@ -154,6 +155,12 @@ export default function ProductsPage() {
   const [newEditSizeValue, setNewEditSizeValue] = useState("");
   const [newEditSizeStock, setNewEditSizeStock] = useState(0);
   const [newEditSizePrice, setNewEditSizePrice] = useState(0);
+
+  // Edit size state
+  const [editingSizeId, setEditingSizeId] = useState<number | null>(null);
+  const [editSizeValue, setEditSizeValue] = useState("");
+  const [editSizeStock, setEditSizeStock] = useState(0);
+  const [editSizePrice, setEditSizePrice] = useState(0);
 
   // Edit translation state
   const [editingTranslationId, setEditingTranslationId] = useState<number | null>(null);
@@ -333,6 +340,52 @@ export default function ProductsPage() {
         toast.error(error instanceof Error ? error.message : "Failed to delete size");
       },
     });
+  };
+
+  const handleEditSizeClick = (size: { id: number; size: string; stock: number; price: string }) => {
+    setEditingSizeId(size.id);
+    setEditSizeValue(size.size);
+    setEditSizeStock(size.stock);
+    setEditSizePrice(Number(size.price));
+  };
+
+  const handleUpdateSize = () => {
+    if (!editingSizeId) return;
+
+    if (!editSizeValue || editSizeValue.trim() === "") {
+      toast.error("Please select a size");
+      return;
+    }
+
+    updateSizeMutation.mutate(
+      {
+        id: editingSizeId,
+        data: {
+          size: editSizeValue,
+          stock: editSizeStock,
+          price: editSizePrice,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Size updated successfully");
+          setEditingSizeId(null);
+          setEditSizeValue("");
+          setEditSizeStock(0);
+          setEditSizePrice(0);
+        },
+        onError: (error) => {
+          toast.error(error instanceof Error ? error.message : "Failed to update size");
+        },
+      }
+    );
+  };
+
+  const handleCancelEditSize = () => {
+    setEditingSizeId(null);
+    setEditSizeValue("");
+    setEditSizeStock(0);
+    setEditSizePrice(0);
   };
 
   const handleAddSizeInEdit = () => {
@@ -1274,23 +1327,101 @@ export default function ProductsPage() {
                           <TableBody>
                             {productDetails.sizes.map((size) => (
                               <TableRow key={size.id}>
-                                <TableCell className="font-medium">{size.size}</TableCell>
-                                <TableCell>
-                                  <Badge variant={size.stock > 0 ? "default" : "destructive"}>
-                                    {size.stock}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-amber-600 font-semibold">${size.price}</TableCell>
-                                <TableCell className="text-right">
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => handleDeleteSize(size.id)}
-                                    disabled={deleteSizeMutation.isPending}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </TableCell>
+                                {editingSizeId === size.id ? (
+                                  <>
+                                    <TableCell>
+                                      <Select
+                                        value={editSizeValue}
+                                        onValueChange={setEditSizeValue}
+                                      >
+                                        <SelectTrigger className="w-full">
+                                          <SelectValue placeholder="Select size" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {SIZE_OPTIONS.map((option) => (
+                                            <SelectItem key={option} value={option}>
+                                              {option}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        value={editSizeStock}
+                                        onChange={(e) => setEditSizeStock(Number(e.target.value))}
+                                        className="w-20"
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={editSizePrice}
+                                        onChange={(e) => setEditSizePrice(Number(e.target.value))}
+                                        className="w-24"
+                                      />
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <div className="flex justify-end gap-1">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={handleUpdateSize}
+                                          disabled={updateSizeMutation.isPending}
+                                        >
+                                          {updateSizeMutation.isPending ? (
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                          ) : (
+                                            "Save"
+                                          )}
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={handleCancelEditSize}
+                                          disabled={updateSizeMutation.isPending}
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </>
+                                ) : (
+                                  <>
+                                    <TableCell className="font-medium">{size.size}</TableCell>
+                                    <TableCell>
+                                      <Badge variant={size.stock > 0 ? "default" : "destructive"}>
+                                        {size.stock}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-amber-600 font-semibold">${size.price}</TableCell>
+                                    <TableCell className="text-right">
+                                      <div className="flex justify-end gap-1">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleEditSizeClick(size)}
+                                          title="Edit Size"
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="destructive"
+                                          onClick={() => handleDeleteSize(size.id)}
+                                          disabled={deleteSizeMutation.isPending}
+                                          title="Delete Size"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </>
+                                )}
                               </TableRow>
                             ))}
                           </TableBody>

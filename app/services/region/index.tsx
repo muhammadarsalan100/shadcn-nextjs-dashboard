@@ -1,5 +1,4 @@
 import { apiClientJson } from "@/lib/api-client";
-import { BASE_URL } from "@/lib/auth";
 
 // Region types
 export type Region = {

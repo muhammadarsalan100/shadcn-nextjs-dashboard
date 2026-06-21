@@ -1,5 +1,4 @@
 import { apiClientJson } from "@/lib/api-client";
-import { BASE_URL } from "@/lib/auth";
 
 // Cloudinary configuration
 const CLOUDINARY_CLOUD_NAME = "di0opppiq";

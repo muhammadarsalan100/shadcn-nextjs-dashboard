@@ -1428,7 +1428,7 @@ export default function ProductsPage() {
                         </Table>
                       ) : (
                         <p className="text-center text-muted-foreground py-8">
-                          No sizes added yet. Click "Add Size" above to add one.
+                          No sizes added yet. Click &quot;Add Size&quot; above to add one.
                         </p>
                       )}
                     </CardContent>
@@ -1654,7 +1654,7 @@ export default function ProductsPage() {
                   ))}
                   {productDetails.translations.length === 0 && !showAddTranslation && (
                     <p className="text-center text-muted-foreground py-8">
-                      No translations found. Click "Add Translation" to add one.
+                      No translations found. Click &quot;Add Translation&quot; to add one.
                     </p>
                   )}
                 </div>

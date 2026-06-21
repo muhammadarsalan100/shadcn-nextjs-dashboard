@@ -45,8 +45,6 @@ import {
   uploadToCloudinary,
   uploadMultipleToCloudinary,
   type ImageData,
-  type ProductSize,
-  type ProductTranslation,
   type CreateProductInput,
   type UpdateProductInput,
   type Product,
@@ -438,7 +436,7 @@ export default function ProductsPage() {
     try {
       await updateMutation.mutateAsync({ id: editProductId, data: updateData });
       toast.success("Image removed successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to remove image");
     }
   };
@@ -531,7 +529,7 @@ export default function ProductsPage() {
     setValue,
     watch,
     reset,
-    formState: { errors },
+    formState: {},
   } = useForm<FormValues>({
     defaultValues: {
       discountPercentage: 0,

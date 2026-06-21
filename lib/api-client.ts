@@ -23,11 +23,11 @@ export async function apiClient(
   const token = skipAuth ? null : getToken();
   
   // Build headers
-  const requestHeaders: HeadersInit = {
+  const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...headers,
+    ...(headers as Record<string, string>),
   };
-  
+
   // Add authorization header if token exists
   if (token) {
     requestHeaders['Authorization'] = `Bearer ${token}`;

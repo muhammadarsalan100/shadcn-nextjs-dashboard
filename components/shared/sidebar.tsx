@@ -13,6 +13,7 @@ import {
 	ChevronRight,
 	Languages,
 	Package,
+	ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -72,6 +73,12 @@ const sidebarGroups = [
 				href: "/dashboard/users",
 				icon: Users,
 				badge: "12",
+			},
+			{
+				title: "Orders",
+				href: "/dashboard/orders",
+				icon: ShoppingCart,
+				badge: null,
 			},
 		],
 	},

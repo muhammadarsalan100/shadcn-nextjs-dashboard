@@ -120,6 +120,8 @@ export default function ProductsPage() {
   // Delete dialog state
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [sizeToDelete, setSizeToDelete] = useState<number | null>(null);
+  const [translationToDelete, setTranslationToDelete] = useState<number | null>(null);
 
   // Size management state
   const [openSizesDialog, setOpenSizesDialog] = useState(false);
@@ -335,9 +337,15 @@ export default function ProductsPage() {
 
 
   const handleDeleteSize = (sizeId: number) => {
-    deleteSizeMutation.mutate(sizeId, {
+    setSizeToDelete(sizeId);
+  };
+
+  const confirmDeleteSize = () => {
+    if (sizeToDelete == null) return;
+    deleteSizeMutation.mutate(sizeToDelete, {
       onSuccess: () => {
         toast.success("Size deleted successfully");
+        setSizeToDelete(null);
       },
       onError: (error) => {
         toast.error(error instanceof Error ? error.message : "Failed to delete size");
@@ -484,9 +492,15 @@ export default function ProductsPage() {
   };
 
   const handleDeleteTranslation = (translationId: number) => {
-    deleteTranslationMutation.mutate(translationId, {
+    setTranslationToDelete(translationId);
+  };
+
+  const confirmDeleteTranslation = () => {
+    if (translationToDelete == null) return;
+    deleteTranslationMutation.mutate(translationToDelete, {
       onSuccess: () => {
         toast.success("Translation deleted successfully");
+        setTranslationToDelete(null);
       },
       onError: (error) => {
         toast.error(error instanceof Error ? error.message : "Failed to delete translation");
@@ -780,6 +794,60 @@ export default function ProductsPage() {
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Size Confirmation */}
+      <Dialog
+        open={sizeToDelete != null}
+        onOpenChange={(open) => {
+          if (!open) setSizeToDelete(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this size? This action cannot be undone.</p>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setSizeToDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteSize}
+              disabled={deleteSizeMutation.isPending}
+            >
+              {deleteSizeMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Translation Confirmation */}
+      <Dialog
+        open={translationToDelete != null}
+        onOpenChange={(open) => {
+          if (!open) setTranslationToDelete(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this translation? This action cannot be undone.</p>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setTranslationToDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteTranslation}
+              disabled={deleteTranslationMutation.isPending}
+            >
+              {deleteTranslationMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

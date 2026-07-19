@@ -3,15 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash } from "lucide-react";
-import { UseMutationResult } from "@tanstack/react-query";
 import { Region } from "@/app/services/region";
 import { Column } from "@/components/shared/data-table";
 
-type DeleteMutation = UseMutationResult<{ message: string }, Error, number>;
-
 export const regionColumns = (
-  deleteMutation: DeleteMutation,
-  onEditClick: (region: Region) => void
+  onEditClick: (region: Region) => void,
+  onDeleteClick: (region: Region) => void
 ): Column<Region>[] => [
   { header: "Name", accessorKey: "name" },
   { header: "Currency", accessorKey: "currencyCode" },
@@ -23,7 +20,13 @@ export const regionColumns = (
     header: "Status",
     accessorKey: "active",
     cell: (region: Region) => (
-      <Badge variant={region.active ? "default" : "secondary"}>
+      <Badge
+        className={
+          region.active
+            ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-300"
+            : "border-red-200 bg-red-50 text-red-700 hover:bg-red-50 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-300"
+        }
+      >
         {region.active ? "Active" : "Inactive"}
       </Badge>
     ),
@@ -39,8 +42,7 @@ export const regionColumns = (
         <Button
           size="sm"
           variant="destructive"
-          disabled={deleteMutation.isPending && deleteMutation.variables === region.id}
-          onClick={() => deleteMutation.mutate(region.id)}
+          onClick={() => onDeleteClick(region)}
         >
           <Trash className="h-4 w-4" />
         </Button>

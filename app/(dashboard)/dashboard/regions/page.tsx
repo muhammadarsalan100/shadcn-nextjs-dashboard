@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, Filter } from "lucide-react";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRegions } from "@/lib/query/region/region.query";
 import { useCreateRegion, useDeleteRegion, useUpdateRegion } from "@/lib/query/region/region.mutation";
 import { Region } from "@/app/services/region";
@@ -33,6 +33,7 @@ export default function RegionsPage() {
 
   const [openForm, setOpenForm] = useState(false);
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
+  const [regionToDelete, setRegionToDelete] = useState<Region | null>(null);
 
   const {
     register,
@@ -154,13 +155,49 @@ export default function RegionsPage() {
         <CardContent>
           <DataTable
             data={regions}
-            columns={regionColumns(deleteMutation, handleEditClick)}
+            columns={regionColumns(handleEditClick, setRegionToDelete)}
             isLoading={isLoading}
             error={isError}
             emptyMessage="No regions found"
           />
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!regionToDelete}
+        onOpenChange={(open) => {
+          if (!open) setRegionToDelete(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <p>
+            Are you sure you want to delete region{" "}
+            <span className="font-medium">{regionToDelete?.name}</span>? This
+            action cannot be undone.
+          </p>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setRegionToDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (!regionToDelete) return;
+                deleteMutation.mutate(regionToDelete.id, {
+                  onSuccess: () => setRegionToDelete(null),
+                });
+              }}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add / Edit Dialog */}
       <Dialog open={openForm} onOpenChange={setOpenForm}>

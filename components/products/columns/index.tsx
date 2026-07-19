@@ -96,10 +96,9 @@ export const productColumns = (
     header: "Stock",
     cell: (product: Product) => (
       <Badge 
-        variant={product.inStock ? "default" : "destructive"}
         className={product.inStock 
-          ? "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400" 
-          : ""
+          ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-300" 
+          : "border-red-200 bg-red-50 text-red-700 hover:bg-red-50 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-300"
         }
       >
         {product.inStock ? "In Stock" : "Out of Stock"}

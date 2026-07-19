@@ -8,12 +8,11 @@ import { UseMutationResult } from "@tanstack/react-query";
 import { Column } from "@/components/shared/data-table";
 
 type UpdateMutation = UseMutationResult<User, Error, { id: number; active?: boolean; role?: User["role"] }>;
-type DeleteMutation = UseMutationResult<{ message: string }, Error, number>;
 
 export const userColumns = (
   toggleMutation: UpdateMutation,
-  deleteMutation: DeleteMutation,
-  roles: User["role"][] = ["admin", "user"] // List of all roles
+  onDeleteClick: (user: User) => void,
+  roles: User["role"][] = ["admin", "user"]
 ): Column<User>[] => [
   {
     header: "Name",
@@ -33,7 +32,7 @@ export const userColumns = (
         }
         disabled={
           !user.active || (toggleMutation.isPending && toggleMutation.variables?.id === user.id)
-        } // ✅ Disable if user is inactive
+        }
       >
         <SelectTrigger>
           <SelectValue>{user.role}</SelectValue>
@@ -51,7 +50,13 @@ export const userColumns = (
   {
     header: "Status",
     cell: (user: User) => (
-      <span className={user.active ? "text-green-600 font-medium" : "text-red-500 font-medium"}>
+      <span
+        className={
+          user.active
+            ? "inline-flex rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-300"
+            : "inline-flex rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-300"
+        }
+      >
         {user.active ? "Active" : "Inactive"}
       </span>
     ),
@@ -74,8 +79,7 @@ export const userColumns = (
         <Button
           size="sm"
           variant="destructive"
-          disabled={deleteMutation.isPending && deleteMutation.variables === user.id}
-          onClick={() => deleteMutation.mutate(user.id)}
+          onClick={() => onDeleteClick(user)}
         >
           <Trash2 className="h-4 w-4" />
         </Button>

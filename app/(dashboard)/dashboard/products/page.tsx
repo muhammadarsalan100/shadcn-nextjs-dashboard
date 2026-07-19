@@ -68,6 +68,7 @@ import {
 type FormValues = {
   discountPercentage: number;
   perfumeType: "male" | "female" | "unisex";
+  sortOrder: number;
   sizes: {
     size: string;
     stock: number;
@@ -129,6 +130,7 @@ export default function ProductsPage() {
   const [editProductId, setEditProductId] = useState<number | null>(null);
   const [editPerfumeType, setEditPerfumeType] = useState<"male" | "female" | "unisex">("unisex");
   const [editDiscount, setEditDiscount] = useState<number>(0);
+  const [editSortOrder, setEditSortOrder] = useState<number>(0);
   const [editActive, setEditActive] = useState<boolean>(true);
   const [isEditUploading, setIsEditUploading] = useState(false);
   
@@ -235,6 +237,7 @@ export default function ProductsPage() {
     setEditProductId(product.id);
     setEditPerfumeType("unisex");
     setEditDiscount(Number(product.discountPercentage) || 0);
+    setEditSortOrder(product.sortOrder ?? 0);
     setEditActive(product.active);
     // Reset image states
     setEditThumbnail(null);
@@ -253,6 +256,7 @@ export default function ProductsPage() {
     if (productDetails && openEditDialog) {
       setEditPerfumeType(productDetails.perfumeType);
       setEditDiscount(Number(productDetails.discountPercentage) || 0);
+      setEditSortOrder(productDetails.sortOrder ?? 0);
       setEditActive(productDetails.active);
       setEditThumbnailPreview(productDetails.thumbnailUrl);
       setEditImage1Preview(productDetails.image1Url);
@@ -288,6 +292,7 @@ export default function ProductsPage() {
       const updateData: UpdateProductInput = {
         perfumeType: editPerfumeType,
         discountPercentage: editDiscount,
+        sortOrder: editSortOrder,
         active: editActive,
       };
 
@@ -534,6 +539,7 @@ export default function ProductsPage() {
     defaultValues: {
       discountPercentage: 0,
       perfumeType: "unisex",
+      sortOrder: 0,
       sizes: [{ size: "", stock: 0, price: 0 }],
       translations: [{ languageId: "", categoryId: "", title: "", description: "" }],
     },
@@ -673,6 +679,7 @@ export default function ProductsPage() {
       const productData: CreateProductInput = {
         discountPercentage: data.discountPercentage || 0,
         perfumeType: data.perfumeType,
+        sortOrder: data.sortOrder,
         thumbnail: thumbnailData,
         images: imagesData.length > 0 ? imagesData : undefined,
         sizes: data.sizes.map((s) => ({
@@ -851,6 +858,17 @@ export default function ProductsPage() {
                       max="100"
                       value={editDiscount}
                       onChange={(e) => setEditDiscount(Number(e.target.value))}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Sort Order</label>
+                    <Input
+                      type="number"
+                      step="1"
+                      value={editSortOrder}
+                      onChange={(e) => setEditSortOrder(Number(e.target.value))}
                       placeholder="0"
                     />
                   </div>
@@ -1797,6 +1815,16 @@ export default function ProductsPage() {
                       min="0"
                       max="100"
                       {...register("discountPercentage", { valueAsNumber: true })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Sort Order *</label>
+                    <Input
+                      type="number"
+                      step="1"
+                      {...register("sortOrder", { required: true, valueAsNumber: true })}
                       placeholder="0"
                     />
                   </div>

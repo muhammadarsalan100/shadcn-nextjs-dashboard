@@ -27,6 +27,7 @@ export type ProductTranslation = {
 export type CreateProductInput = {
   discountPercentage?: number;
   perfumeType: "male" | "female" | "unisex";
+  sortOrder: number;
   thumbnail: ImageData;
   images?: ImageData[];
   sizes: ProductSize[];
@@ -115,6 +116,7 @@ export type Product = {
   description: string | null;
   price: string;
   discountPercentage: string;
+  sortOrder: number;
   inStock: boolean;
   active: boolean;
   thumbnailUrl?: string;
@@ -137,6 +139,7 @@ export type ProductDetails = {
   id: number;
   perfumeType: "male" | "female" | "unisex";
   discountPercentage: string;
+  sortOrder: number;
   thumbnailUrl: string | null;
   thumbnailPublicId: string | null;
   image1Url: string | null;
@@ -187,6 +190,7 @@ export async function deleteProduct(id: number): Promise<{ message: string }> {
 export type UpdateProductInput = {
   perfumeType?: "male" | "female" | "unisex";
   discountPercentage?: number;
+  sortOrder?: number;
   active?: boolean;
   thumbnailUrl?: string | null;
   thumbnailPublicId?: string | null;

@@ -20,6 +20,8 @@ type RegionFormValues = {
   currencyCode: string;
   pricePercentage: number;
   conversionRate: number;
+  shippingAmount: number;
+  timeZoneOffsetMinutes: number;
   active: boolean;
 };
 
@@ -40,12 +42,14 @@ export default function RegionsPage() {
     watch,
     formState: { errors },
   } = useForm<RegionFormValues>({
-    defaultValues: { 
-      name: "", 
+    defaultValues: {
+      name: "",
       currencyCode: "",
-      pricePercentage: 0, 
+      pricePercentage: 0,
       conversionRate: 1,
-      active: true 
+      shippingAmount: 0,
+      timeZoneOffsetMinutes: 0,
+      active: true
     },
   });
 
@@ -53,11 +57,13 @@ export default function RegionsPage() {
 
   const handleEditClick = (region: Region) => {
     setCurrentRegion(region);
-    reset({ 
-      name: region.name, 
+    reset({
+      name: region.name,
       currencyCode: region.currencyCode,
       pricePercentage: region.pricePercentage,
       conversionRate: region.conversionRate,
+      shippingAmount: region.shippingAmount,
+      timeZoneOffsetMinutes: region.timeZoneOffsetMinutes,
       active: region.active
     });
     setOpenForm(true);
@@ -65,12 +71,14 @@ export default function RegionsPage() {
 
   const handleAddClick = () => {
     setCurrentRegion(null);
-    reset({ 
-      name: "", 
+    reset({
+      name: "",
       currencyCode: "",
-      pricePercentage: 0, 
+      pricePercentage: 0,
       conversionRate: 1,
-      active: true 
+      shippingAmount: 0,
+      timeZoneOffsetMinutes: 0,
+      active: true
     });
     setOpenForm(true);
   };
@@ -79,13 +87,15 @@ export default function RegionsPage() {
     if (currentRegion) {
       // Update
       updateMutation.mutate(
-        { 
-          id: currentRegion.id, 
+        {
+          id: currentRegion.id,
           data: {
             name: data.name,
             currencyCode: data.currencyCode,
             pricePercentage: Number(data.pricePercentage),
             conversionRate: Number(data.conversionRate),
+            shippingAmount: Number(data.shippingAmount),
+            timeZoneOffsetMinutes: Number(data.timeZoneOffsetMinutes),
             active: data.active
           }
         },
@@ -98,8 +108,11 @@ export default function RegionsPage() {
           name: data.name,
           currencyCode: data.currencyCode,
           pricePercentage: Number(data.pricePercentage),
-          conversionRate: Number(data.conversionRate)
-        }, 
+          conversionRate: Number(data.conversionRate),
+          shippingAmount: Number(data.shippingAmount),
+          timeZoneOffsetMinutes: Number(data.timeZoneOffsetMinutes),
+          active: data.active
+        },
         { onSuccess: () => setOpenForm(false) }
       );
     }
@@ -216,6 +229,44 @@ export default function RegionsPage() {
               />
               {errors.conversionRate && (
                 <p className="text-red-500 text-sm">{errors.conversionRate.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block font-medium">Shipping Amount</label>
+              <Input
+                type="number"
+                step="0.01"
+                {...register("shippingAmount", {
+                  required: "Shipping amount is required",
+                  valueAsNumber: true,
+                  min: {
+                    value: 0,
+                    message: "Shipping amount cannot be negative"
+                  }
+                })}
+                placeholder="e.g. 500.00"
+              />
+              {errors.shippingAmount && (
+                <p className="text-red-500 text-sm">{errors.shippingAmount.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block font-medium">Time Zone Offset (minutes)</label>
+              <Input
+                type="number"
+                step="1"
+                {...register("timeZoneOffsetMinutes", {
+                  required: "Time zone offset is required",
+                  valueAsNumber: true,
+                  validate: (value) =>
+                    Number.isInteger(value) || "Time zone offset must be an integer"
+                })}
+                placeholder="e.g. 300"
+              />
+              {errors.timeZoneOffsetMinutes && (
+                <p className="text-red-500 text-sm">{errors.timeZoneOffsetMinutes.message}</p>
               )}
             </div>
 

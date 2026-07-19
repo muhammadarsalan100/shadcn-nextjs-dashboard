@@ -82,8 +82,13 @@ export const productColumns = (
       );
     }
   },
-  { 
-    header: "Stock", 
+  {
+    header: "Sort Order",
+    accessorKey: "sortOrder",
+    className: "w-[90px] text-center",
+  },
+  {
+    header: "Stock",
     cell: (product: Product) => (
       <Badge 
         variant={product.inStock ? "default" : "destructive"}

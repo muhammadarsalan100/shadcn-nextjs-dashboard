@@ -116,7 +116,7 @@ export type Product = {
   description: string | null;
   price: string;
   discountPercentage: string;
-  sortOrder: number;
+  sortOrder: number | null;
   inStock: boolean;
   active: boolean;
   thumbnailUrl?: string;
@@ -139,7 +139,7 @@ export type ProductDetails = {
   id: number;
   perfumeType: "male" | "female" | "unisex";
   discountPercentage: string;
-  sortOrder: number;
+  sortOrder: number | null;
   thumbnailUrl: string | null;
   thumbnailPublicId: string | null;
   image1Url: string | null;

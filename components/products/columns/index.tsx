@@ -84,8 +84,13 @@ export const productColumns = (
   },
   {
     header: "Sort Order",
-    accessorKey: "sortOrder",
     className: "w-[90px] text-center",
+    cell: (product: Product) =>
+      product.sortOrder === null || product.sortOrder === undefined ? (
+        <span className="text-muted-foreground">-</span>
+      ) : (
+        product.sortOrder
+      ),
   },
   {
     header: "Stock",

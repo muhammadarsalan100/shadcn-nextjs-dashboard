@@ -1,6 +1,6 @@
 // Auth utilities for token management and login
 
-export const BASE_URL = 'https://ramik-backend.onrender.com';
+export const BASE_URL = 'https://api.ramikgcc.com';
 
 // Token storage keys
 const TOKEN_KEY = 'auth_token';

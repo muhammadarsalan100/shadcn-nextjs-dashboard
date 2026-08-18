@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { DataTable } from "@/components/shared/data-table";
+import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/shared/pagination";
 import { orderColumns } from "@/components/orders/columns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,12 +34,26 @@ import {
 
 export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const { data: orders, isLoading, isError } = useOrders(
-    statusFilter === "all" ? undefined : { status: statusFilter }
-  );
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const { data: orders, isLoading, isError } = useOrders({
+    ...(statusFilter === "all" ? {} : { status: statusFilter }),
+    page,
+    limit: pageSize,
+  });
   const updateMutation = useUpdateOrder();
   const deleteMutation = useDeleteOrder();
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setPage(1);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   const confirmDelete = () => {
     if (!orderToDelete) return;
@@ -60,7 +75,7 @@ export default function OrdersPage() {
           </p>
         </div>
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
           <SelectTrigger className="w-[220px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -81,11 +96,19 @@ export default function OrdersPage() {
         </CardHeader>
         <CardContent>
           <DataTable
-            data={orders}
+            data={orders?.data}
             columns={orderColumns(updateMutation, setOrderToDelete)}
             isLoading={isLoading}
             error={isError}
             emptyMessage="No orders found"
+          />
+          <Pagination
+            page={orders?.page ?? page}
+            totalPages={orders?.totalPages ?? 1}
+            onPageChange={setPage}
+            totalResults={orders?.totalResults}
+            pageSize={pageSize}
+            onPageSizeChange={handlePageSizeChange}
           />
         </CardContent>
       </Card>

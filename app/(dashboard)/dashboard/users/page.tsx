@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DataTable } from "@/components/shared/data-table";
+import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/shared/pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,16 @@ export default function UsersPage() {
   const updateMutation = useUpdateUser();
   const deleteMutation = useDeleteUser();
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  const totalPages = Math.max(1, Math.ceil((users?.length ?? 0) / pageSize));
+  const paginatedUsers = users?.slice((page - 1) * pageSize, page * pageSize);
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -35,11 +46,19 @@ export default function UsersPage() {
         </CardHeader>
         <CardContent>
           <DataTable
-            data={users}
+            data={paginatedUsers}
             columns={userColumns(updateMutation, setUserToDelete)}
             isLoading={isLoading}
             error={isError}
             emptyMessage="No users found"
+          />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalResults={users?.length}
+            pageSize={pageSize}
+            onPageSizeChange={handlePageSizeChange}
           />
         </CardContent>
       </Card>

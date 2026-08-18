@@ -51,6 +51,7 @@ import {
 } from "@/app/services/products";
 import { toast } from "sonner";
 import { DataTable } from "@/components/shared/data-table";
+import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/shared/pagination";
 import { productColumns } from "@/components/products/columns";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -96,6 +97,20 @@ export default function ProductsPage() {
   const { data: languages } = useLanguages();
   const { data: categories } = useCategories();
   const { data: products, isLoading: productsLoading, isError: productsError } = useProducts();
+  const [productsPage, setProductsPage] = useState(1);
+  const [productsPageSize, setProductsPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const productsTotalPages = Math.max(
+    1,
+    Math.ceil((products?.length ?? 0) / productsPageSize)
+  );
+  const paginatedProducts = products?.slice(
+    (productsPage - 1) * productsPageSize,
+    productsPage * productsPageSize
+  );
+  const handleProductsPageSizeChange = (size: number) => {
+    setProductsPageSize(size);
+    setProductsPage(1);
+  };
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
   const deleteMutation = useDeleteProduct();
@@ -769,11 +784,19 @@ export default function ProductsPage() {
         </CardHeader>
         <CardContent>
           <DataTable
-            data={products}
+            data={paginatedProducts}
             columns={productColumns(handleManageSizesClick, handleEditClick, handleDeleteClick)}
             isLoading={productsLoading}
             error={productsError}
             emptyMessage="No products found. Add your first product to get started."
+          />
+          <Pagination
+            page={productsPage}
+            totalPages={productsTotalPages}
+            onPageChange={setProductsPage}
+            totalResults={products?.length}
+            pageSize={productsPageSize}
+            onPageSizeChange={handleProductsPageSizeChange}
           />
         </CardContent>
       </Card>

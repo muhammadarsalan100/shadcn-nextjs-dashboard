@@ -76,18 +76,42 @@ export type Order = {
 
 export type GetOrdersParams = {
   status?: string;
+  paymentStatus?: string;
+  paymentMethod?: string;
+  userId?: number;
+  regionId?: number;
+  country?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type PaginatedOrders = {
+  data: Order[];
+  results: number;
+  totalResults: number;
+  totalPages: number;
+  page: number;
+  limit: number;
 };
 
 // Get all orders (admin)
-export async function getOrders(params?: GetOrdersParams): Promise<Order[]> {
+export async function getOrders(params?: GetOrdersParams): Promise<PaginatedOrders> {
   const query = new URLSearchParams();
-  if (params?.status) {
-    query.set("status", params.status);
-  }
+  if (params?.status) query.set("status", params.status);
+  if (params?.paymentStatus) query.set("paymentStatus", params.paymentStatus);
+  if (params?.paymentMethod) query.set("paymentMethod", params.paymentMethod);
+  if (params?.userId) query.set("userId", String(params.userId));
+  if (params?.regionId) query.set("regionId", String(params.regionId));
+  if (params?.country) query.set("country", params.country);
+  if (params?.startDate) query.set("startDate", params.startDate);
+  if (params?.endDate) query.set("endDate", params.endDate);
+  query.set("page", String(params?.page ?? 1));
+  query.set("limit", String(params?.limit ?? 50));
 
-  const endpoint = `/api/orders/admin${query.toString() ? `?${query.toString()}` : ""}`;
-  const json = await apiClientJson<{ data: Order[] }>(endpoint);
-  return json.data;
+  const endpoint = `/api/orders/admin?${query.toString()}`;
+  return apiClientJson<PaginatedOrders>(endpoint);
 }
 
 // Update an order (admin) — at least one supported field required

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { AddCategoryForm } from "@/components/category";
 import type { Category } from "@/app/services/categories";
+import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/shared/pagination";
 
 export default function CategoriesPage() {
   const { data: categories, isLoading, isError } = useCategories();
@@ -34,6 +35,16 @@ export default function CategoriesPage() {
 
   const [openForm, setOpenForm] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  const totalPages = Math.max(1, Math.ceil((categories?.length ?? 0) / pageSize));
+  const paginatedCategories = categories?.slice((page - 1) * pageSize, page * pageSize);
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   // Delete handlers
   const handleDeleteClick = (id: number) => {
@@ -122,7 +133,7 @@ export default function CategoriesPage() {
               )}
               {!isLoading &&
                 !isError &&
-                categories?.map((cat) => (
+                paginatedCategories?.map((cat) => (
                   <TableRow key={cat.id}>
                     <TableCell>{cat.name}</TableCell>
                     <TableCell>
@@ -148,6 +159,14 @@ export default function CategoriesPage() {
                 ))}
             </TableBody>
           </Table>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalResults={categories?.length}
+            pageSize={pageSize}
+            onPageSizeChange={handlePageSizeChange}
+          />
         </CardContent>
       </Card>
 

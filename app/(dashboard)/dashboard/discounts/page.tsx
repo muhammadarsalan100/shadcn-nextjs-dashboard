@@ -24,6 +24,7 @@ import {
   useDeleteProductDiscount,
 } from "@/lib/query/product-discounts/product-discounts.mutation";
 import { DataTable } from "@/components/shared/data-table";
+import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/shared/pagination";
 import { productDiscountColumns } from "@/components/product-discounts/columns";
 import { Switch } from "@/components/ui/switch";
 import { ProductDiscount } from "@/app/services/product-discounts";
@@ -60,6 +61,26 @@ export default function DiscountsPage() {
     isLoading: discountsLoading,
     isError: discountsError,
   } = useProductDiscountsByProduct(selectedProductId);
+
+  const [discountsPage, setDiscountsPage] = useState(1);
+  const [discountsPageSize, setDiscountsPageSize] = useState(DEFAULT_PAGE_SIZE);
+  useEffect(() => {
+    setDiscountsPage(1);
+  }, [selectedProductId]);
+
+  const discountsTotalPages = Math.max(
+    1,
+    Math.ceil((discounts?.length ?? 0) / discountsPageSize)
+  );
+  const paginatedDiscounts = discounts?.slice(
+    (discountsPage - 1) * discountsPageSize,
+    discountsPage * discountsPageSize
+  );
+
+  const handleDiscountsPageSizeChange = (size: number) => {
+    setDiscountsPageSize(size);
+    setDiscountsPage(1);
+  };
 
   const createMutation = useCreateProductDiscount();
   const updateMutation = useUpdateProductDiscount();
@@ -190,13 +211,21 @@ export default function DiscountsPage() {
         </CardHeader>
         <CardContent>
           <DataTable
-            data={discounts}
+            data={paginatedDiscounts}
             columns={productDiscountColumns(deleteMutation, handleEditClick, regions)}
             isLoading={selectedProductId ? discountsLoading : false}
             error={discountsError}
             emptyMessage={
               selectedProductId ? "No discounts found for this product" : "Select a product to view its discounts"
             }
+          />
+          <Pagination
+            page={discountsPage}
+            totalPages={discountsTotalPages}
+            onPageChange={setDiscountsPage}
+            totalResults={discounts?.length}
+            pageSize={discountsPageSize}
+            onPageSizeChange={handleDiscountsPageSizeChange}
           />
         </CardContent>
       </Card>

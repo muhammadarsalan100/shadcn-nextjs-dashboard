@@ -11,6 +11,7 @@ import { useLanguages } from "@/lib/query/languages/languages.query";
 import { useCreateLanguage, useDeleteLanguage, useUpdateLanguage } from "@/lib/query/languages/languages.mutation";
 import { Language } from "@/app/services/languages";
 import { DataTable } from "@/components/shared/data-table";
+import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/shared/pagination";
 import { languageColumns } from "@/components/languages/columns";
 
 type CreateFormValues = {
@@ -30,6 +31,16 @@ export default function LanguagesPage() {
 
   const [openForm, setOpenForm] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<Language | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  const totalPages = Math.max(1, Math.ceil((languages?.length ?? 0) / pageSize));
+  const paginatedLanguages = languages?.slice((page - 1) * pageSize, page * pageSize);
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   // Delete dialog state
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -116,11 +127,19 @@ export default function LanguagesPage() {
         </CardHeader>
         <CardContent>
           <DataTable
-            data={languages}
+            data={paginatedLanguages}
             columns={languageColumns(handleEditClick, handleDeleteClick)}
             isLoading={isLoading}
             error={isError}
             emptyMessage="No languages found"
+          />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalResults={languages?.length}
+            pageSize={pageSize}
+            onPageSizeChange={handlePageSizeChange}
           />
         </CardContent>
       </Card>

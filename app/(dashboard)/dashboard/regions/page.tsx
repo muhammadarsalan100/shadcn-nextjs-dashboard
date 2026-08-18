@@ -12,6 +12,7 @@ import { useRegions } from "@/lib/query/region/region.query";
 import { useCreateRegion, useDeleteRegion, useUpdateRegion } from "@/lib/query/region/region.mutation";
 import { Region } from "@/app/services/region";
 import { DataTable } from "@/components/shared/data-table";
+import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/shared/pagination";
 import { regionColumns } from "@/components/regions/columns";
 import { Switch } from "@/components/ui/switch";
 
@@ -34,6 +35,16 @@ export default function RegionsPage() {
   const [openForm, setOpenForm] = useState(false);
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
   const [regionToDelete, setRegionToDelete] = useState<Region | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  const totalPages = Math.max(1, Math.ceil((regions?.length ?? 0) / pageSize));
+  const paginatedRegions = regions?.slice((page - 1) * pageSize, page * pageSize);
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   const {
     register,
@@ -154,11 +165,19 @@ export default function RegionsPage() {
         </CardHeader>
         <CardContent>
           <DataTable
-            data={regions}
+            data={paginatedRegions}
             columns={regionColumns(handleEditClick, setRegionToDelete)}
             isLoading={isLoading}
             error={isError}
             emptyMessage="No regions found"
+          />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalResults={regions?.length}
+            pageSize={pageSize}
+            onPageSizeChange={handlePageSizeChange}
           />
         </CardContent>
       </Card>

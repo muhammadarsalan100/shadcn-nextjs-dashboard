@@ -1584,7 +1584,10 @@ export default function ProductsPage() {
                             <label className="text-xs font-medium">Language *</label>
                             <Select
                               value={newTranslationLanguageId?.toString() || ""}
-                              onValueChange={(v) => setNewTranslationLanguageId(Number(v))}
+                              onValueChange={(v) => {
+                                setNewTranslationLanguageId(Number(v));
+                                setNewTranslationCategoryId(null);
+                              }}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select language" />
@@ -1605,16 +1608,19 @@ export default function ProductsPage() {
                             <Select
                               value={newTranslationCategoryId?.toString() || ""}
                               onValueChange={(v) => setNewTranslationCategoryId(Number(v))}
+                              disabled={!newTranslationLanguageId}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select category" />
                               </SelectTrigger>
                               <SelectContent>
-                                {categories?.map((cat) => (
-                                  <SelectItem key={cat.id} value={String(cat.id)}>
-                                    {cat.name}
-                                  </SelectItem>
-                                ))}
+                                {categories
+                                  ?.filter((cat) => cat.language.id === newTranslationLanguageId)
+                                  .map((cat) => (
+                                    <SelectItem key={cat.id} value={String(cat.id)}>
+                                      {cat.name}
+                                    </SelectItem>
+                                  ))}
                               </SelectContent>
                             </Select>
                           </div>
@@ -1713,11 +1719,13 @@ export default function ProductsPage() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {categories?.map((cat) => (
-                                    <SelectItem key={cat.id} value={String(cat.id)}>
-                                      {cat.name}
-                                    </SelectItem>
-                                  ))}
+                                  {categories
+                                    ?.filter((cat) => cat.language.id === translation.language.id)
+                                    .map((cat) => (
+                                      <SelectItem key={cat.id} value={String(cat.id)}>
+                                        {cat.name}
+                                      </SelectItem>
+                                    ))}
                                 </SelectContent>
                               </Select>
                             </div>
@@ -2180,9 +2188,10 @@ export default function ProductsPage() {
                         <label className="text-xs font-medium">Language *</label>
                         <Select
                           value={watch(`translations.${index}.languageId`)}
-                          onValueChange={(value) =>
-                            setValue(`translations.${index}.languageId`, value)
-                          }
+                          onValueChange={(value) => {
+                            setValue(`translations.${index}.languageId`, value);
+                            setValue(`translations.${index}.categoryId`, "");
+                          }}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select language" />
@@ -2204,16 +2213,23 @@ export default function ProductsPage() {
                           onValueChange={(value) =>
                             setValue(`translations.${index}.categoryId`, value)
                           }
+                          disabled={!watch(`translations.${index}.languageId`)}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                           <SelectContent>
-                            {categories?.map((cat) => (
-                              <SelectItem key={cat.id} value={String(cat.id)}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
+                            {categories
+                              ?.filter(
+                                (cat) =>
+                                  String(cat.language.id) ===
+                                  watch(`translations.${index}.languageId`)
+                              )
+                              .map((cat) => (
+                                <SelectItem key={cat.id} value={String(cat.id)}>
+                                  {cat.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       </div>

@@ -56,14 +56,14 @@ const databases = [
 export default function DatabasePage() {
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between">
+			<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div>
 					<h2 className="text-3xl font-bold tracking-tight">Database</h2>
 					<p className="text-muted-foreground">
 						Manage your databases and data operations.
 					</p>
 				</div>
-				<div className="flex gap-2">
+				<div className="flex flex-wrap gap-2">
 					<Button variant="outline" className="flex items-center gap-2">
 						<Upload className="h-4 w-4" />
 						Import
@@ -137,7 +137,7 @@ export default function DatabasePage() {
 						{databases.map((db) => (
 							<div
 								key={db.id}
-								className="flex items-center justify-between p-4 border rounded-lg"
+								className="flex flex-col gap-3 p-4 border rounded-lg sm:flex-row sm:items-center sm:justify-between"
 							>
 								<div className="flex items-center gap-4">
 									<div className="p-2 bg-gray-100 rounded-lg">
@@ -150,7 +150,7 @@ export default function DatabasePage() {
 										</p>
 									</div>
 								</div>
-								<div className="flex items-center gap-4">
+								<div className="flex flex-wrap items-center gap-2 sm:gap-4">
 									<Badge
 										variant={db.status === "Active" ? "default" : "secondary"}
 									>

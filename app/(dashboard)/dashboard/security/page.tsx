@@ -264,7 +264,7 @@ export default function SecurityPage() {
 						{activeSessions.map((session) => (
 							<div
 								key={session.id}
-								className="flex items-center justify-between p-4 border rounded-lg"
+								className="flex flex-col gap-3 p-4 border rounded-lg sm:flex-row sm:items-center sm:justify-between"
 							>
 								<div className="flex items-center gap-4">
 									<div className="p-2 bg-gray-100 rounded-lg">
@@ -272,7 +272,7 @@ export default function SecurityPage() {
 									</div>
 									<div>
 										<h4 className="font-medium">{session.device}</h4>
-										<div className="flex items-center gap-4 text-sm text-muted-foreground">
+										<div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
 											<span className="flex items-center gap-1">
 												<MapPin className="h-3 w-3" />
 												{session.location}

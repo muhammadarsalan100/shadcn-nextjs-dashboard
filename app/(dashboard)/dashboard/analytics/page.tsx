@@ -1,10 +1,24 @@
 "use client";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+
+const analyticsTabs = [
+	{ value: "overview", label: "Overview" },
+	{ value: "revenue", label: "Revenue" },
+	{ value: "users", label: "Users" },
+];
 import {
 	TrendingUp,
 	TrendingDown,
@@ -72,9 +86,11 @@ const topPages = [
 ];
 
 export default function AnalyticsPage() {
+	const [activeTab, setActiveTab] = useState("overview");
+
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between">
+			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<div>
 					<h2 className="text-3xl font-bold tracking-tight">Analytics</h2>
 					<p className="text-muted-foreground">
@@ -82,7 +98,7 @@ export default function AnalyticsPage() {
 						performance.
 					</p>
 				</div>
-				<div className="flex items-center gap-2">
+				<div className="flex flex-wrap items-center gap-2">
 					<Button variant="outline" size="sm">
 						<Filter className="h-4 w-4 mr-2" />
 						Filter
@@ -146,8 +162,21 @@ export default function AnalyticsPage() {
 			{/* Analytics Content */}
 			<div className="grid gap-6 lg:grid-cols-3">
 				<div className="lg:col-span-2">
-					<Tabs defaultValue="overview" className="space-y-4">
-						<TabsList className="grid w-full grid-cols-3">
+					<Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+						{/* Mobile: dropdown instead of tab row */}
+						<Select value={activeTab} onValueChange={setActiveTab}>
+							<SelectTrigger className="w-full sm:hidden">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								{analyticsTabs.map((tab) => (
+									<SelectItem key={tab.value} value={tab.value}>
+										{tab.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						<TabsList className="hidden w-full grid-cols-3 sm:grid">
 							<TabsTrigger value="overview">Overview</TabsTrigger>
 							<TabsTrigger value="revenue">Revenue</TabsTrigger>
 							<TabsTrigger value="users">Users</TabsTrigger>

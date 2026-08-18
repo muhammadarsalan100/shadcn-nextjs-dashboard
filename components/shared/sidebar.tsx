@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ import {
 	Package,
 	ShoppingCart,
 	Percent,
+	X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -67,12 +68,26 @@ const sidebarGroups = [
 ];
 
 interface SidebarProps {
+	isMobileOpen?: boolean;
 	onMobileClose?: () => void;
 }
 
-export function Sidebar({ onMobileClose }: SidebarProps) {
+export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
 	const pathname = usePathname();
 	const [isCollapsed, setIsCollapsed] = useState(false);
+
+	// Auto-collapse to icon-only on tablet widths (md-lg); desktop (lg+) defaults
+	// to expanded but stays user-toggleable via the button above.
+	useEffect(() => {
+		const tabletQuery = window.matchMedia("(min-width: 768px) and (max-width: 1023px)");
+		const applyAutoCollapse = (matches: boolean) => {
+			if (matches) setIsCollapsed(true);
+		};
+		applyAutoCollapse(tabletQuery.matches);
+		const handleChange = (e: MediaQueryListEvent) => applyAutoCollapse(e.matches);
+		tabletQuery.addEventListener("change", handleChange);
+		return () => tabletQuery.removeEventListener("change", handleChange);
+	}, []);
 
 	const handleLinkClick = () => {
 		if (onMobileClose) {
@@ -81,14 +96,31 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
 	};
 
 	return (
-		<div
-			className={cn(
-				"flex h-full flex-col border-r bg-card shadow-sm transition-all duration-300",
-				isCollapsed ? "w-16" : "w-72",
+		<>
+			{/* Mobile backdrop */}
+			{isMobileOpen && (
+				<div
+					className="fixed inset-0 z-40 bg-black/50 md:hidden"
+					onClick={onMobileClose}
+					aria-hidden="true"
+				/>
 			)}
-		>
+
+			<div
+				className={cn(
+					"fixed inset-y-0 left-0 z-50 flex h-full w-72 flex-col border-r bg-card shadow-sm transition-transform duration-300 ease-in-out",
+					isMobileOpen ? "translate-x-0" : "-translate-x-full",
+					"md:static md:z-auto md:translate-x-0 md:transition-[width] md:duration-300",
+					isCollapsed ? "md:w-16" : "md:w-72",
+				)}
+			>
 			{/* Logo */}
-			<div className="flex h-16 items-center border-b px-6 justify-between">
+			<div
+				className={cn(
+					"flex h-16 items-center border-b px-6 justify-between",
+					isCollapsed && "md:justify-center md:px-2",
+				)}
+			>
 				{!isCollapsed && (
 					<Link href="/dashboard" className="flex items-center gap-3 group">
 						<div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -99,16 +131,12 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
 						</span>
 					</Link>
 				)}
-				{isCollapsed && (
-					<div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
-						<LayoutDashboard className="w-4 h-4 text-primary-foreground" />
-					</div>
-				)}
 				<Button
 					variant="ghost"
 					size="icon"
-					className="h-8 w-8 hover:bg-muted"
+					className={cn("hidden h-8 w-8 hover:bg-muted md:inline-flex", isCollapsed && "md:mx-auto")}
 					onClick={() => setIsCollapsed(!isCollapsed)}
+					aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
 				>
 					{isCollapsed ? (
 						<ChevronRight className="h-4 w-4" />
@@ -116,10 +144,19 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
 						<ChevronLeft className="h-4 w-4" />
 					)}
 				</Button>
+				<Button
+					variant="ghost"
+					size="icon"
+					className="h-8 w-8 hover:bg-muted md:hidden"
+					onClick={onMobileClose}
+					aria-label="Close menu"
+				>
+					<X className="h-4 w-4" />
+				</Button>
 			</div>
 
 			{/* Navigation Groups */}
-			<nav className="flex-1 space-y-8 p-6">
+			<nav className={cn("flex-1 space-y-8 py-6", isCollapsed ? "md:px-2 px-6" : "px-6")}>
 				{sidebarGroups.map((group) => (
 					<div key={group.title} className="space-y-3">
 						{/* Group Title */}
@@ -145,7 +182,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
 											isActive
 												? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
 												: "text-muted-foreground hover:text-foreground",
-											isCollapsed && "justify-center px-3 py-4",
+											isCollapsed && "justify-center md:px-0 py-4",
 										)}
 										title={isCollapsed ? item.title : undefined}
 									>
@@ -169,5 +206,6 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
 				))}
 			</nav>
 		</div>
+		</>
 	);
 }

@@ -132,7 +132,7 @@ export default function DocumentsPage() {
 												</div>
 												<div>
 													<p className="font-medium">{doc.name}</p>
-													<div className="flex items-center gap-4 text-sm text-muted-foreground">
+													<div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
 														<span>{doc.type}</span>
 														<span>{doc.size}</span>
 														<span>{doc.lastModified}</span>

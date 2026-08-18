@@ -129,6 +129,7 @@ export default function ProductsPage() {
 
   // Edit dialog state
   const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editActiveTab, setEditActiveTab] = useState("basic");
   const [editProductId, setEditProductId] = useState<number | null>(null);
   const [editPerfumeType, setEditPerfumeType] = useState<"male" | "female" | "unisex">("unisex");
   const [editDiscount, setEditDiscount] = useState<number>(0);
@@ -728,7 +729,7 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-amber-500 to-pink-500 bg-clip-text text-transparent">
             Products
@@ -737,7 +738,7 @@ export default function ProductsPage() {
         </div>
         <Button
           onClick={() => setOpenForm(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600"
+          className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600 w-full sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           Add Product
@@ -746,12 +747,12 @@ export default function ProductsPage() {
 
       {/* Search & Filters */}
       <Card>
-        <CardContent className="p-6 flex items-center gap-4">
+        <CardContent className="p-6 flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
             <Input placeholder="Search products..." className="pl-8" />
           </div>
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
             <Filter className="h-4 w-4" />
             Filter
           </Button>
@@ -857,6 +858,7 @@ export default function ProductsPage() {
       <Dialog open={openEditDialog} onOpenChange={(open) => {
         setOpenEditDialog(open);
         if (!open) {
+          setEditActiveTab("basic");
           setEditProductId(null);
           setEditThumbnail(null);
           setEditThumbnailPreview(null);
@@ -889,8 +891,20 @@ export default function ProductsPage() {
               <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
             </div>
           ) : productDetails ? (
-            <Tabs defaultValue="basic" className="mt-4">
-              <TabsList className="grid w-full grid-cols-4">
+            <Tabs value={editActiveTab} onValueChange={setEditActiveTab} className="mt-4">
+              {/* Mobile: dropdown instead of tab row */}
+              <Select value={editActiveTab} onValueChange={setEditActiveTab}>
+                <SelectTrigger className="w-full sm:hidden">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">Basic Info</SelectItem>
+                  <SelectItem value="images">Images</SelectItem>
+                  <SelectItem value="sizes">Sizes ({productDetails.sizes.length})</SelectItem>
+                  <SelectItem value="translations">Translations ({productDetails.translations.length})</SelectItem>
+                </SelectContent>
+              </Select>
+              <TabsList className="hidden w-full grid-cols-2 sm:grid sm:grid-cols-4">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="images">Images</TabsTrigger>
                 <TabsTrigger value="sizes">Sizes ({productDetails.sizes.length})</TabsTrigger>
@@ -899,7 +913,7 @@ export default function ProductsPage() {
 
               {/* Basic Info Tab */}
               <TabsContent value="basic" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Perfume Type</label>
                     <Select
@@ -975,7 +989,7 @@ export default function ProductsPage() {
 
               {/* Images Tab */}
               <TabsContent value="images" className="mt-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Thumbnail */}
                   <Card>
                     <CardHeader className="pb-2">
@@ -1329,7 +1343,7 @@ export default function ProductsPage() {
                         <CardTitle className="text-sm">New Size</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <label className="text-xs font-medium">Size *</label>
                             <Select value={newEditSizeValue} onValueChange={setNewEditSizeValue}>
@@ -1542,7 +1556,7 @@ export default function ProductsPage() {
                         <CardTitle className="text-sm">New Translation</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <label className="text-xs font-medium">Language *</label>
                             <Select
@@ -1771,7 +1785,7 @@ export default function ProductsPage() {
             onSubmit={sizeForm.handleSubmit(handleAddSize)}
             className="space-y-4 mt-4"
           >
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-medium">Size *</label>
                 <Select
@@ -1855,7 +1869,7 @@ export default function ProductsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Perfume Type *</label>
                     <Select
@@ -2022,7 +2036,7 @@ export default function ProductsPage() {
                 {sizeFields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="grid grid-cols-4 gap-3 items-end p-3 bg-muted/50 rounded-lg"
+                    className="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:items-end p-3 bg-muted/50 rounded-lg"
                   >
                     <div className="space-y-1">
                       <label className="text-xs font-medium">Size *</label>
@@ -2138,7 +2152,7 @@ export default function ProductsPage() {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-xs font-medium">Language *</label>
                         <Select

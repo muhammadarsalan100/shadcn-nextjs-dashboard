@@ -1,5 +1,5 @@
 "use client";
-import { Bell, Search } from "lucide-react";
+import { Bell, Menu, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,11 +16,17 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { getUser, logout } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import type { User } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
 
 
-export function Topbar() {
+interface TopbarProps {
+	onMenuClick?: () => void;
+}
+
+export function Topbar({ onMenuClick }: TopbarProps) {
 	const [user, setUser] = useState<User | null>(null);
+	const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
 	useEffect(() => {
 		setUser(getUser());
@@ -40,10 +46,66 @@ export function Topbar() {
 	};
 
 	return (
-		<div className="flex h-16 items-center justify-between border-b px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+		<div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+			{/* Mobile: expanded search overlay */}
+			<div
+				className={cn(
+					"h-16 items-center gap-2 px-3",
+					isMobileSearchOpen ? "flex sm:hidden" : "hidden",
+				)}
+			>
+				<div className="relative flex-1 min-w-0">
+					<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+					<Input
+						autoFocus
+						type="search"
+						placeholder="Search anything..."
+						className="pl-10 pr-4 py-2 h-10 w-full bg-muted/50 border-0 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+					/>
+				</div>
+				<Button
+					variant="ghost"
+					size="icon"
+					className="h-9 w-9 shrink-0 hover:bg-muted transition-colors"
+					aria-label="Close search"
+					onClick={() => setIsMobileSearchOpen(false)}
+				>
+					<X className="h-5 w-5" />
+				</Button>
+			</div>
+
+			{/* Default bar */}
+			<div
+				className={cn(
+					"h-16 items-center justify-between gap-2 px-3 sm:px-6",
+					isMobileSearchOpen ? "hidden sm:flex" : "flex",
+				)}
+			>
+			{/* Mobile menu toggle */}
+			<Button
+				variant="ghost"
+				size="icon"
+				className="h-9 w-9 shrink-0 hover:bg-muted transition-colors md:hidden"
+				aria-label="Open menu"
+				onClick={onMenuClick}
+			>
+				<Menu className="h-5 w-5" />
+			</Button>
+
 			{/* Search */}
-			<div className="flex items-center max-w-2xl flex-1">
-				<div className="relative w-full max-w-lg">
+			<div className="flex items-center max-w-2xl flex-1 min-w-0">
+				{/* Mobile: icon-only trigger */}
+				<Button
+					variant="ghost"
+					size="icon"
+					className="h-9 w-9 shrink-0 hover:bg-muted transition-colors sm:hidden"
+					aria-label="Open search"
+					onClick={() => setIsMobileSearchOpen(true)}
+				>
+					<Search className="h-5 w-5" />
+				</Button>
+				{/* sm+: full search input */}
+				<div className="hidden sm:flex w-full max-w-lg relative">
 					<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 					<Input
 						type="search"
@@ -54,9 +116,11 @@ export function Topbar() {
 			</div>
 
 			{/* Right Section */}
-			<div className="flex items-center gap-3">
+			<div className="flex items-center gap-1 sm:gap-3 shrink-0">
 				{/* App Switcher */}
-				<AppSwitcher />
+				<div className="hidden sm:block">
+					<AppSwitcher />
+				</div>
 
 				{/* Theme Toggle */}
 				<ThemeToggle />
@@ -65,7 +129,7 @@ export function Topbar() {
 				<Button
 					variant="ghost"
 					size="icon"
-					className="relative h-9 w-9 hover:bg-muted transition-colors"
+					className="relative h-9 w-9 hover:bg-muted transition-colors hidden sm:inline-flex"
 					aria-label="Notifications"
 				>
 					<Bell className="h-4 w-4" />
@@ -130,6 +194,7 @@ export function Topbar() {
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
+		</div>
 		</div>
 	);
 }

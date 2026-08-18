@@ -130,7 +130,7 @@ export default function CartPage() {
                   <CardContent className="p-0">
                     <div className="flex gap-4 p-4">
                       {/* Product Image */}
-                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted/50">
+                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted/50">
                         {item.discountPercentage > 0 && (
                           <Badge
                             variant="destructive"
@@ -193,7 +193,7 @@ export default function CartPage() {
                         </div>
 
                         {/* Quantity Controls */}
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-4 border-t">
                           <div className="flex items-center gap-2 border rounded-md">
                             <Button
                               variant="ghost"

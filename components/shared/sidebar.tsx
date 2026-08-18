@@ -5,9 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
 	LayoutDashboard,
-	Settings,
 	Users,
-	BarChart3,
 	FolderKanban,
 	ChevronLeft,
 	ChevronRight,
@@ -19,29 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 
 const sidebarGroups = [
-	{
-		title: "General",
-		items: [
-			{
-				title: "Dashboard",
-				href: "/dashboard",
-				icon: LayoutDashboard,
-				badge: null,
-			},
-			{
-				title: "Analytics",
-				href: "/dashboard/analytics",
-				icon: BarChart3,
-				badge: "New",
-			},
-			{
-				title: "Settings",
-				href: "/dashboard/settings",
-				icon: Settings,
-				badge: null,
-			},
-		],
-	},
 	{
 		title: "Pages",
 		items: [

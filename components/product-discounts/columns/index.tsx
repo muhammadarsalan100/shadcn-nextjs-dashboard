@@ -35,7 +35,8 @@ export const productDiscountColumns = (
   },
   {
     header: "Start Date",
-    cell: (discount: ProductDiscount) => new Date(discount.startDateTime).toLocaleString(),
+    cell: (discount: ProductDiscount) =>
+      discount.startDateTime ? new Date(discount.startDateTime).toLocaleString() : <span className="text-muted-foreground">-</span>,
   },
   {
     header: "End Date",

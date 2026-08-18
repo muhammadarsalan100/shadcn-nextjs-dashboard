@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -87,6 +87,8 @@ export default function DiscountsPage() {
 
   const activeValue = watch("active");
   const regionIdValue = watch("regionId");
+  const startDateTimeValue = watch("startDateTime");
+  const endDateTimeValue = watch("endDateTime");
 
   const handleAddClick = () => {
     setCurrentDiscount(null);
@@ -117,7 +119,7 @@ export default function DiscountsPage() {
           data: {
             regionId: Number(data.regionId),
             discountPercentage: Number(data.discountPercentage),
-            startDateTime: new Date(data.startDateTime).toISOString(),
+            startDateTime: data.startDateTime ? new Date(data.startDateTime).toISOString() : null,
             endDateTime: data.endDateTime ? new Date(data.endDateTime).toISOString() : null,
             active: data.active,
           },
@@ -130,7 +132,7 @@ export default function DiscountsPage() {
           productId: selectedProductId,
           regionId: Number(data.regionId),
           discountPercentage: Number(data.discountPercentage),
-          startDateTime: new Date(data.startDateTime).toISOString(),
+          startDateTime: data.startDateTime ? new Date(data.startDateTime).toISOString() : null,
           endDateTime: data.endDateTime ? new Date(data.endDateTime).toISOString() : null,
           active: data.active,
         },
@@ -253,19 +255,37 @@ export default function DiscountsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="block font-medium">Start Date/Time</label>
-              <Input
-                type="datetime-local"
-                {...register("startDateTime", { required: "Start date/time is required" })}
-              />
-              {errors.startDateTime && (
-                <p className="text-red-500 text-sm">{errors.startDateTime.message}</p>
-              )}
+              <label className="block font-medium">Start Date/Time (optional)</label>
+              <div className="relative">
+                <Input type="datetime-local" className="pr-9" {...register("startDateTime")} />
+                {startDateTimeValue && (
+                  <button
+                    type="button"
+                    onClick={() => setValue("startDateTime", "")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Clear start date/time"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
               <label className="block font-medium">End Date/Time (optional)</label>
-              <Input type="datetime-local" {...register("endDateTime")} />
+              <div className="relative">
+                <Input type="datetime-local" className="pr-9" {...register("endDateTime")} />
+                {endDateTimeValue && (
+                  <button
+                    type="button"
+                    onClick={() => setValue("endDateTime", "")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Clear end date/time"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center justify-between">

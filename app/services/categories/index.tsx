@@ -1,8 +1,5 @@
 import { apiClientJson } from "@/lib/api-client";
 
-// Re-export BASE_URL for backward compatibility
-export { BASE_URL } from "@/lib/auth";
-
 // Category types
 export type CategoryLanguage = {
   id: number;

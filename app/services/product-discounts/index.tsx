@@ -6,7 +6,7 @@ export type ProductDiscount = {
   productId: number;
   regionId: number;
   discountPercentage: number;
-  startDateTime: string;
+  startDateTime: string | null;
   endDateTime: string | null;
   active: boolean;
 };
@@ -15,7 +15,7 @@ export type CreateProductDiscountInput = {
   productId: number;
   regionId: number;
   discountPercentage: number;
-  startDateTime: string;
+  startDateTime?: string | null;
   endDateTime?: string | null;
   active?: boolean;
 };
@@ -23,7 +23,7 @@ export type CreateProductDiscountInput = {
 export type UpdateProductDiscountInput = {
   regionId?: number;
   discountPercentage?: number;
-  startDateTime?: string;
+  startDateTime?: string | null;
   endDateTime?: string | null;
   active?: boolean;
 };

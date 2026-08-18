@@ -65,7 +65,7 @@ export const productColumns = (
     header: "Price", 
     cell: (product: Product) => (
       <span className="font-semibold text-amber-600">
-        ${product.price}
+        BHD {product.price}
       </span>
     )
   },

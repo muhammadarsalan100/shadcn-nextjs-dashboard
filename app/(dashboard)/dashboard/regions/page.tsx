@@ -22,7 +22,6 @@ type RegionFormValues = {
   pricePercentage: number;
   conversionRate: number;
   shippingAmount: number;
-  timeZoneOffsetMinutes: number;
   active: boolean;
 };
 
@@ -60,7 +59,6 @@ export default function RegionsPage() {
       pricePercentage: 0,
       conversionRate: 1,
       shippingAmount: 0,
-      timeZoneOffsetMinutes: 0,
       active: true
     },
   });
@@ -75,7 +73,6 @@ export default function RegionsPage() {
       pricePercentage: region.pricePercentage,
       conversionRate: region.conversionRate,
       shippingAmount: region.shippingAmount,
-      timeZoneOffsetMinutes: region.timeZoneOffsetMinutes,
       active: region.active
     });
     setOpenForm(true);
@@ -89,7 +86,6 @@ export default function RegionsPage() {
       pricePercentage: 0,
       conversionRate: 1,
       shippingAmount: 0,
-      timeZoneOffsetMinutes: 0,
       active: true
     });
     setOpenForm(true);
@@ -107,7 +103,7 @@ export default function RegionsPage() {
             pricePercentage: Number(data.pricePercentage),
             conversionRate: Number(data.conversionRate),
             shippingAmount: Number(data.shippingAmount),
-            timeZoneOffsetMinutes: Number(data.timeZoneOffsetMinutes),
+            timeZoneOffsetMinutes: currentRegion.timeZoneOffsetMinutes,
             active: data.active
           }
         },
@@ -122,7 +118,7 @@ export default function RegionsPage() {
           pricePercentage: Number(data.pricePercentage),
           conversionRate: Number(data.conversionRate),
           shippingAmount: Number(data.shippingAmount),
-          timeZoneOffsetMinutes: Number(data.timeZoneOffsetMinutes),
+          timeZoneOffsetMinutes: 0,
           active: data.active
         },
         { onSuccess: () => setOpenForm(false) }
@@ -305,24 +301,6 @@ export default function RegionsPage() {
               />
               {errors.shippingAmount && (
                 <p className="text-red-500 text-sm">{errors.shippingAmount.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="block font-medium">Time Zone Offset (minutes)</label>
-              <Input
-                type="number"
-                step="1"
-                {...register("timeZoneOffsetMinutes", {
-                  required: "Time zone offset is required",
-                  valueAsNumber: true,
-                  validate: (value) =>
-                    Number.isInteger(value) || "Time zone offset must be an integer"
-                })}
-                placeholder="e.g. 300"
-              />
-              {errors.timeZoneOffsetMinutes && (
-                <p className="text-red-500 text-sm">{errors.timeZoneOffsetMinutes.message}</p>
               )}
             </div>
 

@@ -15,7 +15,6 @@ export const regionColumns = (
   { header: "Price %", accessorKey: "pricePercentage" },
   { header: "Conversion Rate", accessorKey: "conversionRate" },
   { header: "Shipping Amount", accessorKey: "shippingAmount" },
-  { header: "TZ Offset (min)", accessorKey: "timeZoneOffsetMinutes" },
   {
     header: "Status",
     accessorKey: "active",

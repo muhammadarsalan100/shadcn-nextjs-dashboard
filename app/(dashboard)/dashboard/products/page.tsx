@@ -67,7 +67,6 @@ import {
 } from "@/components/ui/table";
 
 type FormValues = {
-  discountPercentage: number;
   perfumeType: "male" | "female" | "unisex";
   sortOrder: number;
   sizes: {
@@ -147,7 +146,6 @@ export default function ProductsPage() {
   const [editActiveTab, setEditActiveTab] = useState("basic");
   const [editProductId, setEditProductId] = useState<number | null>(null);
   const [editPerfumeType, setEditPerfumeType] = useState<"male" | "female" | "unisex">("unisex");
-  const [editDiscount, setEditDiscount] = useState<number>(0);
   const [editSortOrder, setEditSortOrder] = useState<number>(0);
   const [editActive, setEditActive] = useState<boolean>(true);
   const [isEditUploading, setIsEditUploading] = useState(false);
@@ -254,7 +252,6 @@ export default function ProductsPage() {
   const handleEditClick = (product: Product) => {
     setEditProductId(product.id);
     setEditPerfumeType("unisex");
-    setEditDiscount(Number(product.discountPercentage) || 0);
     setEditSortOrder(product.sortOrder ?? 0);
     setEditActive(product.active);
     // Reset image states
@@ -273,7 +270,6 @@ export default function ProductsPage() {
   useEffect(() => {
     if (productDetails && openEditDialog) {
       setEditPerfumeType(productDetails.perfumeType);
-      setEditDiscount(Number(productDetails.discountPercentage) || 0);
       setEditSortOrder(productDetails.sortOrder ?? 0);
       setEditActive(productDetails.active);
       setEditThumbnailPreview(productDetails.thumbnailUrl);
@@ -309,7 +305,6 @@ export default function ProductsPage() {
     try {
       const updateData: UpdateProductInput = {
         perfumeType: editPerfumeType,
-        discountPercentage: editDiscount,
         sortOrder: editSortOrder,
         active: editActive,
       };
@@ -567,7 +562,6 @@ export default function ProductsPage() {
     formState: {},
   } = useForm<FormValues>({
     defaultValues: {
-      discountPercentage: 0,
       perfumeType: "unisex",
       sortOrder: 0,
       sizes: [{ size: "", stock: 0, price: 0 }],
@@ -707,7 +701,6 @@ export default function ProductsPage() {
 
       // Prepare product data
       const productData: CreateProductInput = {
-        discountPercentage: data.discountPercentage || 0,
         perfumeType: data.perfumeType,
         sortOrder: data.sortOrder,
         thumbnail: thumbnailData,
@@ -952,19 +945,6 @@ export default function ProductsPage() {
                         <SelectItem value="unisex">Unisex</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Discount (%)</label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      value={editDiscount}
-                      onChange={(e) => setEditDiscount(Number(e.target.value))}
-                      placeholder="0"
-                    />
                   </div>
 
                   <div className="space-y-2">
@@ -1391,7 +1371,7 @@ export default function ProductsPage() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs font-medium">Price ($) *</label>
+                            <label className="text-xs font-medium">Price (BHD) *</label>
                             <Input
                               type="number"
                               step="0.01"
@@ -1519,7 +1499,7 @@ export default function ProductsPage() {
                                         {size.stock}
                                       </Badge>
                                     </TableCell>
-                                    <TableCell className="text-amber-600 font-semibold">${size.price}</TableCell>
+                                    <TableCell className="text-amber-600 font-semibold">BHD {size.price}</TableCell>
                                     <TableCell className="text-right">
                                       <div className="flex justify-end gap-1">
                                         <Button
@@ -1845,7 +1825,7 @@ export default function ProductsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium">Price ($) *</label>
+                <label className="text-xs font-medium">Price (BHD) *</label>
                 <Input
                   type="number"
                   step="0.01"
@@ -1918,18 +1898,6 @@ export default function ProductsPage() {
                         <SelectItem value="unisex">Unisex</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Discount (%)</label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      {...register("discountPercentage", { valueAsNumber: true })}
-                      placeholder="0"
-                    />
                   </div>
 
                   <div className="space-y-2">
@@ -2100,7 +2068,7 @@ export default function ProductsPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium">Price ($) *</label>
+                      <label className="text-xs font-medium">Price (BHD) *</label>
                       <Input
                         type="number"
                         step="0.01"

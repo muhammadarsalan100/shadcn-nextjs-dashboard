@@ -20,8 +20,9 @@ import {
 import { Column } from "@/components/shared/data-table";
 import { cn } from "@/lib/utils";
 import { UseMutationResult } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { getStatusTone, isPaid, toneBadgeClass, toneTriggerClass } from "@/components/orders/status-badge";
 
 type UpdateMutation = UseMutationResult<
   Order,
@@ -29,66 +30,10 @@ type UpdateMutation = UseMutationResult<
   { id: number } & UpdateOrderInput
 >;
 
-type StatusTone = "success" | "fail" | "pending" | "neutral";
-
-function isPaid(paymentStatus: string): boolean {
-  const s = (paymentStatus || "").toUpperCase();
-  return ["PAID", "CAPTURED", "SUCCESS"].includes(s);
-}
-
-function getStatusTone(status: string): StatusTone {
-  const s = (status || "").toUpperCase();
-
-  if (
-    ["DELIVERED", "PAID", "CAPTURED", "SUCCESS", "CONFIRM", "CONFIRMED"].includes(
-      s
-    )
-  ) {
-    return "success";
-  }
-  if (["FAILED"].includes(s)) {
-    return "fail";
-  }
-  if (
-    [
-      "PENDING",
-      "PROCESSING",
-      "CUSTOM_CLEARANCE",
-      "CUSTOMS_CLEARANCE",
-      "SHIPPED",
-      "OUT_FOR_DELIVERY",
-      "REFUNDED",
-      "COD",
-    ].includes(s)
-  ) {
-    return "pending";
-  }
-  return "neutral";
-}
-
-const toneTriggerClass: Record<StatusTone, string> = {
-  success:
-    "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:ring-emerald-200/60 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/60 [&_svg]:text-emerald-700 [&_svg]:opacity-100 dark:[&_svg]:text-emerald-300",
-  fail:
-    "border-red-200 bg-red-50 text-red-700 hover:bg-red-100 focus:ring-red-200/60 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60 [&_svg]:text-red-600 [&_svg]:opacity-100 dark:[&_svg]:text-red-300",
-  pending:
-    "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:ring-amber-200/60 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/60 [&_svg]:text-amber-700 [&_svg]:opacity-100 dark:[&_svg]:text-amber-300",
-  neutral: "[&_svg]:opacity-70",
-};
-
-const toneBadgeClass: Record<StatusTone, string> = {
-  success:
-    "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-300",
-  fail:
-    "border-red-200 bg-red-50 text-red-700 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-300",
-  pending:
-    "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300",
-  neutral: "bg-muted text-muted-foreground border-border",
-};
-
 export const orderColumns = (
   updateMutation: UpdateMutation,
-  onDeleteClick: (order: Order) => void
+  onDeleteClick: (order: Order) => void,
+  onViewClick: (order: Order) => void
 ): Column<Order>[] => [
   {
     header: "Order #",
@@ -243,7 +188,10 @@ export const orderColumns = (
     header: "Actions",
     className: "text-right",
     cell: (order) => (
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button size="sm" variant="outline" onClick={() => onViewClick(order)}>
+          <Eye className="h-4 w-4" />
+        </Button>
         <Button
           size="sm"
           variant="destructive"

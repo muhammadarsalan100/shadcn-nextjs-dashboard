@@ -46,6 +46,8 @@ export type UpdateOrderInput = {
 
 export type OrderItem = {
   id: number;
+  productId?: number;
+  productSizeId?: number;
   productName: string;
   size: string;
   quantity: number;
@@ -53,6 +55,16 @@ export type OrderItem = {
   discountPercentage: string | number;
   finalPrice: string | number;
   thumbnailUrl?: string | null;
+};
+
+export type OrderPayment = {
+  id: number;
+  paymentMethod: string;
+  amount: string | number;
+  currency: string;
+  status: string;
+  transactionId?: string | null;
+  gatewayOrderId?: string | null;
 };
 
 export type Order = {
@@ -72,6 +84,7 @@ export type Order = {
   shippingAddress: string;
   createdAt: string;
   items: OrderItem[];
+  payments?: OrderPayment[];
 };
 
 export type GetOrdersParams = {
@@ -187,4 +200,13 @@ export function getPaymentStatusLabel(status: string): string {
     COD: "Cash on delivery",
   };
   return map[status?.toUpperCase()] || status || "—";
+}
+
+export function getPaymentMethodLabel(method: string): string {
+  const map: Record<string, string> = {
+    COD: "Cash on delivery",
+    PREPAID: "Prepaid (card/online)",
+    CARD: "Card",
+  };
+  return map[method?.toUpperCase()] || method || "—";
 }

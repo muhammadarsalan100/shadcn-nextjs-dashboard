@@ -20,9 +20,10 @@ import {
 import { Column } from "@/components/shared/data-table";
 import { cn } from "@/lib/utils";
 import { UseMutationResult } from "@tanstack/react-query";
-import { Eye, Trash2 } from "lucide-react";
+import { Download, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getStatusTone, isPaid, toneBadgeClass, toneTriggerClass } from "@/components/orders/status-badge";
+import { downloadOrderReceipt } from "@/components/orders/download-receipt";
 
 type UpdateMutation = UseMutationResult<
   Order,
@@ -191,6 +192,14 @@ export const orderColumns = (
       <div className="flex justify-end gap-2">
         <Button size="sm" variant="outline" onClick={() => onViewClick(order)}>
           <Eye className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          title="Download Receipt"
+          onClick={() => downloadOrderReceipt(order)}
+        >
+          <Download className="h-4 w-4" />
         </Button>
         <Button
           size="sm"

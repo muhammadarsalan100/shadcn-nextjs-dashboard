@@ -23,9 +23,11 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { StatusBadge } from "@/components/orders/status-badge";
+import { downloadOrderReceipt } from "@/components/orders/download-receipt";
 import {
   Calendar,
   CreditCard,
+  Download,
   Mail,
   MapPin,
   Package,
@@ -395,6 +397,15 @@ export default function OrdersPage() {
             <Button variant="outline" onClick={() => setOrderToView(null)}>
               Close
             </Button>
+            {orderToView && (
+              <Button
+                onClick={() => downloadOrderReceipt(orderToView)}
+                className="gap-2 bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600"
+              >
+                <Download className="h-4 w-4" />
+                Download Receipt
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

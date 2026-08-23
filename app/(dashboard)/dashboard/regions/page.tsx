@@ -19,7 +19,6 @@ import { Switch } from "@/components/ui/switch";
 type RegionFormValues = {
   name: string;
   currencyCode: string;
-  pricePercentage: number;
   conversionRate: number;
   shippingAmount: number;
   active: boolean;
@@ -56,7 +55,6 @@ export default function RegionsPage() {
     defaultValues: {
       name: "",
       currencyCode: "",
-      pricePercentage: 0,
       conversionRate: 1,
       shippingAmount: 0,
       active: true
@@ -70,7 +68,6 @@ export default function RegionsPage() {
     reset({
       name: region.name,
       currencyCode: region.currencyCode,
-      pricePercentage: region.pricePercentage,
       conversionRate: region.conversionRate,
       shippingAmount: region.shippingAmount,
       active: region.active
@@ -83,7 +80,6 @@ export default function RegionsPage() {
     reset({
       name: "",
       currencyCode: "",
-      pricePercentage: 0,
       conversionRate: 1,
       shippingAmount: 0,
       active: true
@@ -100,7 +96,6 @@ export default function RegionsPage() {
           data: {
             name: data.name,
             currencyCode: data.currencyCode,
-            pricePercentage: Number(data.pricePercentage),
             conversionRate: Number(data.conversionRate),
             shippingAmount: Number(data.shippingAmount),
             timeZoneOffsetMinutes: currentRegion.timeZoneOffsetMinutes,
@@ -115,7 +110,6 @@ export default function RegionsPage() {
         {
           name: data.name,
           currencyCode: data.currencyCode,
-          pricePercentage: Number(data.pricePercentage),
           conversionRate: Number(data.conversionRate),
           shippingAmount: Number(data.shippingAmount),
           timeZoneOffsetMinutes: 0,
@@ -246,22 +240,6 @@ export default function RegionsPage() {
                 maxLength={3}
               />
               {errors.currencyCode && <p className="text-red-500 text-sm">{errors.currencyCode.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="block font-medium">Price Percentage</label>
-              <Input
-                type="number"
-                step="0.01"
-                {...register("pricePercentage", { 
-                  required: "Price percentage is required",
-                  valueAsNumber: true
-                })}
-                placeholder="e.g. 10.00"
-              />
-              {errors.pricePercentage && (
-                <p className="text-red-500 text-sm">{errors.pricePercentage.message}</p>
-              )}
             </div>
 
             <div className="space-y-2">

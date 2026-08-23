@@ -12,7 +12,6 @@ export const regionColumns = (
 ): Column<Region>[] => [
   { header: "Name", accessorKey: "name" },
   { header: "Currency", accessorKey: "currencyCode" },
-  { header: "Price %", accessorKey: "pricePercentage" },
   { header: "Conversion Rate", accessorKey: "conversionRate" },
   { header: "Shipping Amount", accessorKey: "shippingAmount" },
   {

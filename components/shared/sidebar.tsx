@@ -12,7 +12,6 @@ import {
 	Languages,
 	Package,
 	ShoppingCart,
-	Percent,
 	X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,12 +54,6 @@ const sidebarGroups = [
 				title: "Orders",
 				href: "/dashboard/orders",
 				icon: ShoppingCart,
-				badge: null,
-			},
-			{
-				title: "Discounts",
-				href: "/dashboard/discounts",
-				icon: Percent,
 				badge: null,
 			},
 		],

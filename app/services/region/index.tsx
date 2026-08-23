@@ -5,7 +5,6 @@ export type Region = {
   id: number;
   name: string;
   currencyCode: string;
-  pricePercentage: number;
   conversionRate: number;
   shippingAmount: number;
   timeZoneOffsetMinutes: number;
@@ -15,7 +14,6 @@ export type Region = {
 export type CreateRegionInput = {
   name: string;
   currencyCode: string;
-  pricePercentage: number;
   conversionRate: number;
   shippingAmount: number;
   timeZoneOffsetMinutes: number;
@@ -25,7 +23,6 @@ export type CreateRegionInput = {
 export type UpdateRegionInput = {
   name?: string;
   currencyCode?: string;
-  pricePercentage?: number;
   conversionRate?: number;
   shippingAmount?: number;
   timeZoneOffsetMinutes?: number;

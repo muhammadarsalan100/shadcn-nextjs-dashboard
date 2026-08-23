@@ -1,12 +1,12 @@
 import { apiClientJson } from "@/lib/api-client";
 
 // Types
+// Regional prices for a size now live under app/services/product-region-prices
 export type ProductSize = {
   id: number;
   productId: number;
   size: string;
   stock: number;
-  price: string;
 };
 
 // Get product sizes by product ID
@@ -19,13 +19,11 @@ export type CreateProductSizeInput = {
   productId: number;
   size: string;
   stock: number;
-  price: number;
 };
 
 export type UpdateProductSizeInput = {
   size?: string;
   stock?: number;
-  price?: number;
 };
 
 // Create product size

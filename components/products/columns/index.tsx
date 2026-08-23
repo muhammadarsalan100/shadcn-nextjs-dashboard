@@ -2,12 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash, Package, Ruler, Plus, Pencil } from "lucide-react";
+import { Trash, Package, Pencil } from "lucide-react";
 import { Product } from "@/app/services/products";
 import { Column } from "@/components/shared/data-table";
 
 export const productColumns = (
-  onManageSizesClick?: (product: Product) => void,
   onEditClick?: (product: Product) => void,
   onDeleteClick?: (id: number) => void
 ): Column<Product>[] => [
@@ -110,17 +109,6 @@ export const productColumns = (
     className: "text-right w-[240px]",
     cell: (product: Product) => (
       <div className="flex justify-end gap-1">
-        {onManageSizesClick && (
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => onManageSizesClick(product)}
-            className="gap-1 border-amber-500/50 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950/30"
-          >
-            <Plus className="h-3 w-3" />
-            <Ruler className="h-4 w-4" />
-          </Button>
-        )}
         {onEditClick && (
           <Button
             size="sm"

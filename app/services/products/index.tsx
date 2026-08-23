@@ -11,10 +11,15 @@ export type ImageData = {
   publicId: string;
 };
 
+export type SizeRegionalPrice = {
+  regionId: number;
+  price: number;
+};
+
 export type ProductSize = {
   size: string | null;
   stock: number;
-  price: number;
+  regionalPrices: SizeRegionalPrice[];
 };
 
 export type ProductTranslation = {
@@ -124,7 +129,6 @@ export type Product = {
     id: number;
     size: string;
     stock: number;
-    price: string;
   }[];
 };
 
@@ -169,7 +173,6 @@ export type ProductDetails = {
     id: number;
     size: string;
     stock: number;
-    price: string;
   }[];
 };
 

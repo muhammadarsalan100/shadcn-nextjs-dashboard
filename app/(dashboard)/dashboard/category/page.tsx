@@ -11,8 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, Filter, Trash, Edit } from "lucide-react";
-import { useCategories } from "@/lib/query/category.query";
+import { Search, Plus, Filter, Trash, Edit, ImageOff, Loader2 } from "lucide-react";
+import { useCategories, useCategoryById } from "@/lib/query/category.query";
 import { useDeleteCategory } from "@/lib/query/category.mutation";
 import { useState } from "react";
 import {
@@ -34,9 +34,12 @@ export default function CategoriesPage() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const [openForm, setOpenForm] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
+  const [editCategoryId, setEditCategoryId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // Fetch the full admin record (includes the Cloudinary public ID) when editing
+  const { data: categoryDetails, isLoading: categoryDetailsLoading } = useCategoryById(editCategoryId);
 
   const totalPages = Math.max(1, Math.ceil((categories?.length ?? 0) / pageSize));
   const paginatedCategories = categories?.slice((page - 1) * pageSize, page * pageSize);
@@ -62,13 +65,13 @@ export default function CategoriesPage() {
 
   // Edit handler
   const handleEditClick = (cat: Category) => {
-    setCurrentCategory(cat);
+    setEditCategoryId(cat.id);
     setOpenForm(true);
   };
 
   // Add handler
   const handleAddClick = () => {
-    setCurrentCategory(null);
+    setEditCategoryId(null);
     setOpenForm(true);
   };
 
@@ -111,6 +114,7 @@ export default function CategoriesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[70px]">Image</TableHead>
                 <TableHead>Category Name</TableHead>
                 <TableHead>Language</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -119,14 +123,14 @@ export default function CategoriesPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center">
+                  <TableCell colSpan={4} className="text-center">
                     Loading...
                   </TableCell>
                 </TableRow>
               )}
               {isError && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-red-500">
+                  <TableCell colSpan={4} className="text-center text-red-500">
                     Failed to load categories
                   </TableCell>
                 </TableRow>
@@ -135,6 +139,20 @@ export default function CategoriesPage() {
                 !isError &&
                 paginatedCategories?.map((cat) => (
                   <TableRow key={cat.id}>
+                    <TableCell>
+                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br from-amber-100 to-pink-100 dark:from-amber-900/20 dark:to-pink-900/20 flex items-center justify-center">
+                        {cat.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={cat.imageUrl}
+                            alt={cat.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ImageOff className="h-4 w-4 text-amber-500/50" />
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{cat.name}</TableCell>
                     <TableCell>
                       {cat.language?.name} ({cat.language?.code})
@@ -171,15 +189,27 @@ export default function CategoriesPage() {
       </Card>
 
       {/* Add / Edit Dialog */}
-      <Dialog open={openForm} onOpenChange={setOpenForm}>
+      <Dialog
+        open={openForm}
+        onOpenChange={(open) => {
+          setOpenForm(open);
+          if (!open) setEditCategoryId(null);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{currentCategory?.id ? "Edit Category" : "Add Category"}</DialogTitle>
+            <DialogTitle>{editCategoryId ? "Edit Category" : "Add Category"}</DialogTitle>
           </DialogHeader>
-          <AddCategoryForm
-            categoryToEdit={currentCategory ?? undefined}
-            onClose={() => setOpenForm(false)}
-          />
+          {editCategoryId && categoryDetailsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+            </div>
+          ) : (
+            <AddCategoryForm
+              categoryToEdit={editCategoryId ? categoryDetails : null}
+              onClose={() => setOpenForm(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 

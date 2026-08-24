@@ -44,11 +44,12 @@ export function AddCategoryForm({ categoryToEdit, onClose }: AddCategoryFormProp
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  // If editing, populate form
+  // If editing, populate form. Each field is set independently so a missing
+  // or malformed piece (e.g. no language on the record) can't abort the rest.
   useEffect(() => {
     if (categoryToEdit) {
-      setValue("name", categoryToEdit.name);
-      setValue("languageId", String(categoryToEdit.language.id));
+      setValue("name", categoryToEdit.name ?? "");
+      setValue("languageId", categoryToEdit.language?.id != null ? String(categoryToEdit.language.id) : "");
       setImagePreview(categoryToEdit.imageUrl ?? null);
       setImageFile(null);
     } else {
@@ -83,14 +84,12 @@ export function AddCategoryForm({ categoryToEdit, onClose }: AddCategoryFormProp
 
   const onSubmit = async (data: FormValues) => {
     try {
-      let imageUrl: string | undefined;
-      let imagePublicId: string | undefined;
+      let image: { url: string; publicId: string } | undefined;
 
       if (imageFile) {
         setIsUploadingImage(true);
         const uploaded = await uploadCategoryImageToCloudinary(imageFile);
-        imageUrl = uploaded.url;
-        imagePublicId = uploaded.publicId;
+        image = { url: uploaded.url, publicId: uploaded.publicId };
       }
 
       if (categoryToEdit?.id) {
@@ -100,7 +99,7 @@ export function AddCategoryForm({ categoryToEdit, onClose }: AddCategoryFormProp
             data: {
               name: data.name,
               languageId: Number(data.languageId),
-              ...(imageUrl ? { imageUrl, imagePublicId } : {}),
+              ...(image ? { image } : {}),
             },
           },
           { onSuccess: () => onClose?.() }
@@ -110,7 +109,7 @@ export function AddCategoryForm({ categoryToEdit, onClose }: AddCategoryFormProp
           {
             name: data.name,
             languageId: Number(data.languageId),
-            ...(imageUrl ? { imageUrl, imagePublicId } : {}),
+            ...(image ? { image } : {}),
           },
           {
             onSuccess: () => {

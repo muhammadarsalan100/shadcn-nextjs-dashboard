@@ -76,18 +76,19 @@ export type CategoryDetails = Category & {
   imagePublicId: string | null;
 };
 
+// Both create and update take the Cloudinary result as a nested object
+// (matching the product "thumbnail" convention) — the GET responses are
+// what use the flat imageUrl/imagePublicId field names, not the writes.
 export type CreateCategoryInput = {
   name: string;
   languageId: number;
-  imageUrl?: string | null;
-  imagePublicId?: string | null;
+  image?: ImageData | null;
 };
 
 export type UpdateCategoryInput = {
   name?: string;
   languageId?: number;
-  imageUrl?: string | null;
-  imagePublicId?: string | null;
+  image?: ImageData | null;
 };
 
 // Create category

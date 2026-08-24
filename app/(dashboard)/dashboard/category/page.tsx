@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, Filter, Trash, Edit, ImageOff, Loader2 } from "lucide-react";
+import { Search, Plus, Filter, Trash, Edit, ImageOff } from "lucide-react";
 import { useCategories, useCategoryById } from "@/lib/query/category.query";
 import { useDeleteCategory } from "@/lib/query/category.mutation";
 import { useState } from "react";
@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AddCategoryForm } from "@/components/category";
-import type { Category } from "@/app/services/categories";
+import type { Category, CategoryDetails } from "@/app/services/categories";
 import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/shared/pagination";
 
 export default function CategoriesPage() {
@@ -34,12 +34,24 @@ export default function CategoriesPage() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const [openForm, setOpenForm] = useState(false);
-  const [editCategoryId, setEditCategoryId] = useState<number | null>(null);
+  // The row the admin clicked "Edit" on — already has name/language/imageUrl,
+  // proven correct since it's what the table itself renders from.
+  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  // Fetch the full admin record (includes the Cloudinary public ID) when editing
-  const { data: categoryDetails, isLoading: categoryDetailsLoading } = useCategoryById(editCategoryId);
+  // Fetched opportunistically to get the Cloudinary public ID; the form falls
+  // back to the row data above for name/language/image so a slow or incomplete
+  // response here can't leave those fields blank.
+  const { data: categoryDetails } = useCategoryById(currentCategory?.id ?? null);
+
+  const categoryToEdit: CategoryDetails | null = currentCategory
+    ? {
+        ...currentCategory,
+        imagePublicId:
+          categoryDetails?.id === currentCategory.id ? categoryDetails.imagePublicId : null,
+      }
+    : null;
 
   const totalPages = Math.max(1, Math.ceil((categories?.length ?? 0) / pageSize));
   const paginatedCategories = categories?.slice((page - 1) * pageSize, page * pageSize);
@@ -65,13 +77,13 @@ export default function CategoriesPage() {
 
   // Edit handler
   const handleEditClick = (cat: Category) => {
-    setEditCategoryId(cat.id);
+    setCurrentCategory(cat);
     setOpenForm(true);
   };
 
   // Add handler
   const handleAddClick = () => {
-    setEditCategoryId(null);
+    setCurrentCategory(null);
     setOpenForm(true);
   };
 
@@ -193,23 +205,14 @@ export default function CategoriesPage() {
         open={openForm}
         onOpenChange={(open) => {
           setOpenForm(open);
-          if (!open) setEditCategoryId(null);
+          if (!open) setCurrentCategory(null);
         }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editCategoryId ? "Edit Category" : "Add Category"}</DialogTitle>
+            <DialogTitle>{currentCategory ? "Edit Category" : "Add Category"}</DialogTitle>
           </DialogHeader>
-          {editCategoryId && categoryDetailsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
-            </div>
-          ) : (
-            <AddCategoryForm
-              categoryToEdit={editCategoryId ? categoryDetails : null}
-              onClose={() => setOpenForm(false)}
-            />
-          )}
+          <AddCategoryForm categoryToEdit={categoryToEdit} onClose={() => setOpenForm(false)} />
         </DialogContent>
       </Dialog>
 

@@ -117,6 +117,16 @@ type DraftSize = {
   pendingPrice: string;
 };
 
+// A regional discount being drafted on the create-product form
+type DraftDiscount = {
+  key: string;
+  regionId: string;
+  discountPercentage: string;
+  startDateTime: string;
+  endDateTime: string;
+  active: boolean;
+};
+
 // A promotion (free shipping / welcome offer) being drafted on the create-product form
 type DraftPromotion = {
   key: string;
@@ -1046,6 +1056,30 @@ export default function ProductsPage() {
     );
   };
 
+  // Draft regional discounts for the create-product form. Optional — a
+  // brand-new product starts with none.
+  const emptyDraftDiscount = (): DraftDiscount => ({
+    key: nextDraftKey(),
+    regionId: "",
+    discountPercentage: "",
+    startDateTime: "",
+    endDateTime: "",
+    active: true,
+  });
+  const [draftDiscounts, setDraftDiscounts] = useState<DraftDiscount[]>([]);
+
+  const addDraftDiscount = () => {
+    setDraftDiscounts((prev) => [...prev, emptyDraftDiscount()]);
+  };
+
+  const removeDraftDiscount = (key: string) => {
+    setDraftDiscounts((prev) => prev.filter((d) => d.key !== key));
+  };
+
+  const updateDraftDiscount = (key: string, patch: Partial<DraftDiscount>) => {
+    setDraftDiscounts((prev) => prev.map((d) => (d.key === key ? { ...d, ...patch } : d)));
+  };
+
   // Draft promotions (free shipping / welcome offer) for the create-product form.
   // Optional — a brand-new product starts with none.
   const emptyDraftPromotion = (): DraftPromotion => ({
@@ -1143,6 +1177,7 @@ export default function ProductsPage() {
     setImages([]);
     setImagePreviews([]);
     setDraftSizes([emptyDraftSize()]);
+    setDraftDiscounts([]);
     setDraftPromotions([]);
     setCreateActiveTab("basic");
   };
@@ -1178,6 +1213,27 @@ export default function ProductsPage() {
         return;
       }
       seenSizeNames.add(s.size);
+    }
+
+    // Validate discounts (optional — a product can have zero)
+    for (const d of draftDiscounts) {
+      if (!d.regionId) {
+        toast.error("Please select a region for every discount row");
+        return;
+      }
+      const percentage = Number(d.discountPercentage);
+      if (!d.discountPercentage || percentage <= 0) {
+        toast.error("Discount percentage must be greater than zero");
+        return;
+      }
+      if (!d.startDateTime) {
+        toast.error("Please set a start date/time for every discount");
+        return;
+      }
+      if (d.endDateTime && new Date(d.endDateTime) <= new Date(d.startDateTime)) {
+        toast.error("Discount end date must be after its start date");
+        return;
+      }
     }
 
     // Validate promotions (optional — a product can have zero)
@@ -1246,6 +1302,29 @@ export default function ProductsPage() {
 
       const created = await createMutation.mutateAsync(productData);
       const newProductId = created.data.productId;
+
+      // Discounts have their own endpoint and need an existing productId,
+      // so they're created as follow-up calls once the product exists.
+      for (const d of draftDiscounts) {
+        try {
+          await createRegionDiscountMutation.mutateAsync({
+            productId: newProductId,
+            data: {
+              regionId: Number(d.regionId),
+              discountPercentage: Number(d.discountPercentage),
+              startDateTime: new Date(d.startDateTime).toISOString(),
+              endDateTime: d.endDateTime ? new Date(d.endDateTime).toISOString() : null,
+              active: d.active,
+            },
+          });
+        } catch (discountError) {
+          toast.error(
+            `Product created, but a discount failed to save: ${
+              discountError instanceof Error ? discountError.message : "unknown error"
+            }`
+          );
+        }
+      }
 
       // Promotions have their own endpoint and need an existing productId,
       // so they're created as follow-up calls once the product exists.
@@ -3174,7 +3253,7 @@ export default function ProductsPage() {
                   <SelectItem value="basic">Basic Info</SelectItem>
                   <SelectItem value="images">Images</SelectItem>
                   <SelectItem value="sizes">Sizes ({draftSizes.length})</SelectItem>
-                  <SelectItem value="offers">Promotions ({draftPromotions.length})</SelectItem>
+                  <SelectItem value="offers">Offers ({draftDiscounts.length + draftPromotions.length})</SelectItem>
                   <SelectItem value="translations">Translations ({translationFields.length})</SelectItem>
                 </SelectContent>
               </Select>
@@ -3207,11 +3286,11 @@ export default function ProductsPage() {
                   value="offers"
                   className="gap-1.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md"
                 >
-                  <Gift className="h-3.5 w-3.5" />
-                  Promotions
-                  {draftPromotions.length > 0 && (
+                  <Percent className="h-3.5 w-3.5" />
+                  Offers
+                  {draftDiscounts.length + draftPromotions.length > 0 && (
                     <span className="ml-0.5 rounded-full bg-black/10 px-1.5 text-[10px] font-normal dark:bg-white/15">
-                      {draftPromotions.length}
+                      {draftDiscounts.length + draftPromotions.length}
                     </span>
                   )}
                 </TabsTrigger>
@@ -3541,8 +3620,124 @@ export default function ProductsPage() {
                 </Card>
               </TabsContent>
 
-              {/* Promotions Tab */}
-              <TabsContent value="offers" className="mt-4">
+              {/* Offers Tab (Discounts + Promotions) */}
+              <TabsContent value="offers" className="mt-4 space-y-6">
+                <Card>
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Percent className="h-4 w-4" />
+                          Discounts
+                        </CardTitle>
+                        <CardDescription>
+                          Optional — a scheduled percentage discount, per region.
+                        </CardDescription>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addDraftDiscount}
+                        className="gap-1"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Discount
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {draftDiscounts.length === 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        No discounts configured. You can add these later too.
+                      </p>
+                    )}
+                    {draftDiscounts.map((discount) => {
+                      return (
+                        <div key={discount.key} className="rounded-lg border bg-muted/30 overflow-hidden">
+                          <div className="flex items-center justify-between gap-3 p-3 border-b bg-muted/50">
+                            <div className="flex-1 space-y-1 sm:max-w-xs">
+                              <label className="text-xs font-medium">Region *</label>
+                              <Select
+                                value={discount.regionId}
+                                onValueChange={(value) => updateDraftDiscount(discount.key, { regionId: value })}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select region" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {activeRegions.map((r) => (
+                                    <SelectItem key={r.id} value={String(r.id)}>
+                                      {r.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeDraftDiscount(discount.key)}
+                              className="text-destructive hover:text-destructive shrink-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          <div className="p-3 space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium">Discount % *</label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  max="100"
+                                  value={discount.discountPercentage}
+                                  onChange={(e) =>
+                                    updateDraftDiscount(discount.key, { discountPercentage: e.target.value })
+                                  }
+                                  placeholder="e.g. 15"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium">Start *</label>
+                                <Input
+                                  type="datetime-local"
+                                  onClick={(e) => e.currentTarget.showPicker?.()}
+                                  value={discount.startDateTime}
+                                  onChange={(e) =>
+                                    updateDraftDiscount(discount.key, { startDateTime: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium">End (optional)</label>
+                                <Input
+                                  type="datetime-local"
+                                  onClick={(e) => e.currentTarget.showPicker?.()}
+                                  value={discount.endDateTime}
+                                  onChange={(e) =>
+                                    updateDraftDiscount(discount.key, { endDateTime: e.target.value })
+                                  }
+                                />
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={discount.active}
+                                onCheckedChange={(checked) => updateDraftDiscount(discount.key, { active: checked })}
+                              />
+                              <span className="text-xs text-muted-foreground">Active</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+
                 <Card>
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">

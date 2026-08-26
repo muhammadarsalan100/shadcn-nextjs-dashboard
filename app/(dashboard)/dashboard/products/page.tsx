@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, Fragment } from "react";
 import { useForm, useFieldArray, type FieldErrors } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,8 @@ import {
   Percent,
   Gift,
   Truck,
+  Check,
+  ImageIcon,
 } from "lucide-react";
 import { useLanguages } from "@/lib/query/languages/languages.query";
 import { useCategories } from "@/lib/query/category.query";
@@ -141,9 +143,16 @@ type DraftPromotion = {
 // Predefined size options
 const SIZE_OPTIONS = ["30ml", "50ml", "75ml", "100ml", "150ml", "200ml", "250ml", "500ml"];
 
-// Step order for the create-product wizard. Sizes and Offers are optional —
-// Next just moves on, nothing there blocks progress.
-const CREATE_TAB_ORDER = ["basic", "images", "sizes", "offers", "translations"];
+// Steps for the create-product wizard, in order. Sizes and Offers are
+// optional — Next just moves on, nothing there blocks progress.
+const CREATE_STEPS = [
+  { id: "basic", label: "Basic Info", icon: Package, optional: false },
+  { id: "images", label: "Images", icon: ImagePlus, optional: false },
+  { id: "sizes", label: "Sizes & Price", icon: Ruler, optional: true },
+  { id: "offers", label: "Offers", icon: Percent, optional: true },
+  { id: "translations", label: "Translations", icon: Languages, optional: false },
+] as const;
+const CREATE_TAB_ORDER: string[] = CREATE_STEPS.map((s) => s.id);
 
 // Converts an ISO datetime string to the "YYYY-MM-DDTHH:mm" format required by <input type="datetime-local">
 function toDatetimeLocalValue(iso: string | null): string {
@@ -1424,6 +1433,19 @@ export default function ProductsPage() {
     translations: isTranslationsTabComplete,
   };
   const canAdvanceFromCreateTab = isCreateTabComplete[createActiveTab] ?? true;
+
+  // How much has been added on each optional step, shown as a small hint
+  // under its stepper icon (e.g. "2 added") instead of a checkmark.
+  const stepBadgeCount = (id: string) => {
+    switch (id) {
+      case "sizes":
+        return draftSizes.length;
+      case "offers":
+        return draftDiscounts.length + draftPromotions.length;
+      default:
+        return 0;
+    }
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -3307,66 +3329,73 @@ export default function ProductsPage() {
 
           <form onSubmit={handleSubmit(onSubmit, onCreateFormInvalid)} className="mt-4 flex flex-col">
             <Tabs value={createActiveTab} onValueChange={setCreateActiveTab}>
+              {/* Step progress (desktop): icon stepper with a connecting line */}
+              <div className="mb-6 hidden items-start sm:flex">
+                {CREATE_STEPS.map((step, i) => {
+                  const Icon = step.icon;
+                  const isActive = step.id === createActiveTab;
+                  const isDone = !step.optional && isCreateTabComplete[step.id];
+                  const count = stepBadgeCount(step.id);
+                  return (
+                    <Fragment key={step.id}>
+                      <button
+                        type="button"
+                        onClick={() => setCreateActiveTab(step.id)}
+                        className="group flex flex-col items-center gap-1.5"
+                      >
+                        <span
+                          className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors ${
+                            isActive
+                              ? "border-transparent bg-gradient-to-br from-amber-500 to-pink-500 text-white shadow-md shadow-amber-500/30"
+                              : isDone
+                              ? "border-emerald-400 bg-emerald-50 text-emerald-600 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                              : "border-muted-foreground/25 bg-background text-muted-foreground group-hover:border-amber-400 group-hover:text-amber-500"
+                          }`}
+                        >
+                          {isDone ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                        </span>
+                        <span
+                          className={`whitespace-nowrap text-xs font-medium ${
+                            isActive ? "text-foreground" : "text-muted-foreground"
+                          }`}
+                        >
+                          {step.label}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {step.optional ? (count > 0 ? `${count} added` : "Optional") : " "}
+                        </span>
+                      </button>
+                      {i < CREATE_STEPS.length - 1 && (
+                        <div
+                          className={`mt-[18px] h-0.5 flex-1 rounded-full transition-colors ${
+                            i < createTabIndex ? "bg-gradient-to-r from-amber-500 to-pink-500" : "bg-muted"
+                          }`}
+                        />
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </div>
+
               {/* Mobile: dropdown instead of tab row */}
               <Select value={createActiveTab} onValueChange={setCreateActiveTab}>
-                <SelectTrigger className="w-full sm:hidden">
+                <SelectTrigger className="w-full mb-4 sm:hidden">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="basic">Basic Info</SelectItem>
                   <SelectItem value="images">Images</SelectItem>
-                  <SelectItem value="sizes">Sizes ({draftSizes.length})</SelectItem>
+                  <SelectItem value="sizes">Sizes &amp; Price ({draftSizes.length})</SelectItem>
                   <SelectItem value="offers">Offers ({draftDiscounts.length + draftPromotions.length})</SelectItem>
                   <SelectItem value="translations">Translations ({translationFields.length})</SelectItem>
                 </SelectContent>
               </Select>
-              <TabsList className="hidden h-11 w-full grid-cols-2 gap-1 rounded-xl bg-muted/60 p-1 sm:grid sm:grid-cols-5">
-                <TabsTrigger
-                  value="basic"
-                  className="gap-1.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                >
-                  <Package className="h-3.5 w-3.5" />
-                  Basic Info
-                </TabsTrigger>
-                <TabsTrigger
-                  value="images"
-                  className="gap-1.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                >
-                  <ImagePlus className="h-3.5 w-3.5" />
-                  Images
-                </TabsTrigger>
-                <TabsTrigger
-                  value="sizes"
-                  className="gap-1.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                >
-                  <Ruler className="h-3.5 w-3.5" />
-                  Sizes
-                  <span className="ml-0.5 rounded-full bg-black/10 px-1.5 text-[10px] font-normal dark:bg-white/15">
-                    {draftSizes.length}
-                  </span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="offers"
-                  className="gap-1.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                >
-                  <Percent className="h-3.5 w-3.5" />
-                  Offers
-                  {draftDiscounts.length + draftPromotions.length > 0 && (
-                    <span className="ml-0.5 rounded-full bg-black/10 px-1.5 text-[10px] font-normal dark:bg-white/15">
-                      {draftDiscounts.length + draftPromotions.length}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="translations"
-                  className="gap-1.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                >
-                  <Languages className="h-3.5 w-3.5" />
-                  Translations
-                  <span className="ml-0.5 rounded-full bg-black/10 px-1.5 text-[10px] font-normal dark:bg-white/15">
-                    {translationFields.length}
-                  </span>
-                </TabsTrigger>
+              <TabsList className="sr-only">
+                {CREATE_STEPS.map((step) => (
+                  <TabsTrigger key={step.id} value={step.id}>
+                    {step.label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
               {/* Basic Info Tab */}
@@ -3377,11 +3406,14 @@ export default function ProductsPage() {
                       <Package className="h-4 w-4" />
                       Basic Information
                     </CardTitle>
+                    <CardDescription>Core details every product needs, regardless of region.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Perfume Type *</label>
+                        <label className="text-sm font-medium flex items-center gap-1">
+                          Perfume Type <span className="text-destructive">*</span>
+                        </label>
                         <Select
                           value={perfumeType}
                           onValueChange={(value) =>
@@ -3400,13 +3432,16 @@ export default function ProductsPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Sort Order *</label>
+                        <label className="text-sm font-medium flex items-center gap-1">
+                          Sort Order <span className="text-destructive">*</span>
+                        </label>
                         <Input
                           type="number"
                           step="1"
                           {...register("sortOrder", { required: true, valueAsNumber: true })}
                           placeholder="1"
                         />
+                        <p className="text-xs text-muted-foreground">Lower numbers appear first in the catalog.</p>
                       </div>
                     </div>
                   </CardContent>
@@ -3416,98 +3451,137 @@ export default function ProductsPage() {
               {/* Images Tab */}
               <TabsContent value="images" className="mt-4">
                 <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <ImagePlus className="h-4 w-4" />
-                  Product Images
-                </CardTitle>
-                <CardDescription>Upload thumbnail (required) and up to 3 additional images</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Thumbnail */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Thumbnail *</label>
-                  <div className="flex items-start gap-4">
-                    {thumbnailPreview ? (
-                      <div className="relative w-32 h-32 rounded-lg overflow-hidden border">
-                        <img
-                          src={thumbnailPreview}
-                          alt="Thumbnail preview"
-                          className="w-full h-full object-cover"
-                        />
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <ImagePlus className="h-4 w-4" />
+                      Product Images
+                    </CardTitle>
+                    <CardDescription>A clear thumbnail is required — add up to 3 more angles or lifestyle shots.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Thumbnail */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium flex items-center gap-1">
+                          Thumbnail <span className="text-destructive">*</span>
+                        </label>
+                        {thumbnailPreview && (
+                          <Badge variant="outline" className="gap-1 text-[10px] border-emerald-300 text-emerald-600 dark:border-emerald-800 dark:text-emerald-400">
+                            <Check className="h-3 w-3" />
+                            Ready
+                          </Badge>
+                        )}
+                      </div>
+                      {thumbnailPreview ? (
+                        <div className="group relative w-full sm:w-56 aspect-square rounded-xl overflow-hidden border-2 border-amber-400 shadow-sm">
+                          <img
+                            src={thumbnailPreview}
+                            alt="Thumbnail preview"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <button
+                            type="button"
+                            onClick={removeThumbnail}
+                            className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full hover:bg-black/80 transition-colors opacity-0 group-hover:opacity-100"
+                            title="Remove"
+                          >
+                            <X className="h-3.5 w-3.5 text-white" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => thumbnailRef.current?.click()}
+                            className="absolute bottom-2 left-2 right-2 rounded-md bg-black/60 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Change image
+                          </button>
+                        </div>
+                      ) : (
                         <button
                           type="button"
-                          onClick={removeThumbnail}
-                          className="absolute top-1 right-1 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+                          onClick={() => thumbnailRef.current?.click()}
+                          className="w-full sm:w-56 aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 px-4 text-center hover:border-amber-500 hover:bg-amber-500/5 transition-colors"
                         >
-                          <X className="h-3 w-3 text-white" />
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10">
+                            <Upload className="h-5 w-5 text-amber-500" />
+                          </div>
+                          <span className="text-sm font-medium">Click to upload</span>
+                          <span className="text-xs text-muted-foreground">PNG or JPG, up to 10MB</span>
                         </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => thumbnailRef.current?.click()}
-                        className="w-32 h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 hover:border-amber-500 hover:bg-amber-500/5 transition-colors"
-                      >
-                        <Upload className="h-6 w-6 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Upload</span>
-                      </button>
-                    )}
-                    <input
-                      ref={thumbnailRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleThumbnailChange}
-                      className="hidden"
-                    />
-                  </div>
-                </div>
+                      )}
+                      <input
+                        ref={thumbnailRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleThumbnailChange}
+                        className="hidden"
+                      />
+                    </div>
 
-                {/* Additional Images */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Additional Images (max 3)</label>
-                  <div className="flex items-start gap-4 flex-wrap">
-                    {imagePreviews.map((preview, index) => (
-                      <div
-                        key={index}
-                        className="relative w-24 h-24 rounded-lg overflow-hidden border"
-                      >
-                        <img
-                          src={preview}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-1 right-1 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
-                        >
-                          <X className="h-3 w-3 text-white" />
-                        </button>
+                    <Separator />
+
+                    {/* Additional Images */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium">Additional Images</label>
+                        <span className="text-xs text-muted-foreground">{images.length}/3</span>
                       </div>
-                    ))}
-                    {images.length < 3 && (
-                      <button
-                        type="button"
-                        onClick={() => imagesRef.current?.click()}
-                        className="w-24 h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-1 hover:border-amber-500 hover:bg-amber-500/5 transition-colors"
-                      >
-                        <Plus className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Add</span>
-                      </button>
-                    )}
-                    <input
-                      ref={imagesRef}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImagesChange}
-                      className="hidden"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                      <div className="grid grid-cols-3 gap-3 max-w-md">
+                        {[0, 1, 2].map((slot) => {
+                          const preview = imagePreviews[slot];
+                          if (preview) {
+                            return (
+                              <div key={slot} className="group relative aspect-square rounded-lg overflow-hidden border">
+                                <img
+                                  src={preview}
+                                  alt={`Preview ${slot + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(slot)}
+                                  className="absolute top-1 right-1 p-1 bg-black/60 rounded-full hover:bg-black/80 transition-colors opacity-0 group-hover:opacity-100"
+                                  title="Remove"
+                                >
+                                  <X className="h-3 w-3 text-white" />
+                                </button>
+                              </div>
+                            );
+                          }
+                          const isNextSlot = slot === images.length;
+                          return (
+                            <button
+                              key={slot}
+                              type="button"
+                              disabled={!isNextSlot}
+                              onClick={() => imagesRef.current?.click()}
+                              className={`aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${
+                                isNextSlot
+                                  ? "hover:border-amber-500 hover:bg-amber-500/5 cursor-pointer"
+                                  : "opacity-40 cursor-not-allowed"
+                              }`}
+                            >
+                              {isNextSlot ? (
+                                <Plus className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <input
+                        ref={imagesRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImagesChange}
+                        className="hidden"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               {/* Sizes Tab */}

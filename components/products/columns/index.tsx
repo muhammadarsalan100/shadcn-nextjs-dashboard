@@ -51,36 +51,6 @@ export const productColumns = (
       </div>
     )
   },
-  { 
-    header: "Description", 
-    className: "max-w-[300px]",
-    cell: (product: Product) => (
-      <div className="truncate text-muted-foreground text-sm" title={product.description || ""}>
-        {product.description || <span className="italic">—</span>}
-      </div>
-    )
-  },
-  { 
-    header: "Price", 
-    cell: (product: Product) => (
-      <span className="font-semibold text-amber-600">
-        BHD {product.price}
-      </span>
-    )
-  },
-  { 
-    header: "Discount", 
-    cell: (product: Product) => {
-      const discount = Number(product.discountPercentage);
-      return discount > 0 ? (
-        <Badge variant="secondary" className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-          -{discount}%
-        </Badge>
-      ) : (
-        <span className="text-muted-foreground text-sm">—</span>
-      );
-    }
-  },
   {
     header: "Sort Order",
     className: "w-[90px] text-center",

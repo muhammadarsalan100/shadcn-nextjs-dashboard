@@ -179,7 +179,7 @@ export default function RegionsPage() {
           if (!open) setRegionToDelete(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>

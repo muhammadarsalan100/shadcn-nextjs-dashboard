@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, type FieldErrors } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,6 +141,10 @@ type DraftPromotion = {
 // Predefined size options
 const SIZE_OPTIONS = ["30ml", "50ml", "75ml", "100ml", "150ml", "200ml", "250ml", "500ml"];
 
+// Step order for the create-product wizard. Sizes and Offers are optional —
+// Next just moves on, nothing there blocks progress.
+const CREATE_TAB_ORDER = ["basic", "images", "sizes", "offers", "translations"];
+
 // Converts an ISO datetime string to the "YYYY-MM-DDTHH:mm" format required by <input type="datetime-local">
 function toDatetimeLocalValue(iso: string | null): string {
   if (!iso) return "";
@@ -186,6 +190,15 @@ export default function ProductsPage() {
 
   const [openForm, setOpenForm] = useState(false);
   const [createActiveTab, setCreateActiveTab] = useState("basic");
+  const createTabIndex = CREATE_TAB_ORDER.indexOf(createActiveTab);
+  const isFirstCreateTab = createTabIndex === 0;
+  const isLastCreateTab = createTabIndex === CREATE_TAB_ORDER.length - 1;
+  const goToPrevCreateTab = () => {
+    if (createTabIndex > 0) setCreateActiveTab(CREATE_TAB_ORDER[createTabIndex - 1]);
+  };
+  const goToNextCreateTab = () => {
+    if (createTabIndex < CREATE_TAB_ORDER.length - 1) setCreateActiveTab(CREATE_TAB_ORDER[createTabIndex + 1]);
+  };
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
@@ -983,7 +996,7 @@ export default function ProductsPage() {
   } = useForm<FormValues>({
     defaultValues: {
       perfumeType: "unisex",
-      sortOrder: 0,
+      sortOrder: 1,
       translations: [{ languageId: "", categoryId: "", title: "", description: "" }],
     },
   });
@@ -1182,10 +1195,24 @@ export default function ProductsPage() {
     setCreateActiveTab("basic");
   };
 
+  // Since the submit button only shows on the last tab, a react-hook-form
+  // validation failure (e.g. missing Sort Order or a translation field) could
+  // otherwise fail silently on a tab the user isn't looking at.
+  const onCreateFormInvalid = (formErrors: FieldErrors<FormValues>) => {
+    if (formErrors.perfumeType || formErrors.sortOrder) {
+      setCreateActiveTab("basic");
+    } else if (formErrors.translations) {
+      setCreateActiveTab("translations");
+    }
+    toast.error("Please fix the highlighted fields before creating the product.");
+  };
+
   const onSubmit = async (data: FormValues) => {
-    // Validation
+    // Validation — since only the last tab shows the submit button, a failure
+    // on an earlier (possibly hidden) tab jumps the user back to it.
     if (!thumbnail) {
       toast.error("Thumbnail is required");
+      setCreateActiveTab("images");
       return;
     }
 
@@ -1197,6 +1224,7 @@ export default function ProductsPage() {
 
     if (!hasEnglish) {
       toast.error("English (en) translation is mandatory");
+      setCreateActiveTab("translations");
       return;
     }
 
@@ -1206,10 +1234,12 @@ export default function ProductsPage() {
     for (const s of draftSizes) {
       if (!s.size || s.size.trim() === "") {
         toast.error("Please select a size for every size row");
+        setCreateActiveTab("sizes");
         return;
       }
       if (seenSizeNames.has(s.size)) {
         toast.error(`Duplicate size "${s.size}" is not allowed.`);
+        setCreateActiveTab("sizes");
         return;
       }
       seenSizeNames.add(s.size);
@@ -1219,19 +1249,23 @@ export default function ProductsPage() {
     for (const d of draftDiscounts) {
       if (!d.regionId) {
         toast.error("Please select a region for every discount row");
+        setCreateActiveTab("offers");
         return;
       }
       const percentage = Number(d.discountPercentage);
       if (!d.discountPercentage || percentage <= 0) {
         toast.error("Discount percentage must be greater than zero");
+        setCreateActiveTab("offers");
         return;
       }
       if (!d.startDateTime) {
         toast.error("Please set a start date/time for every discount");
+        setCreateActiveTab("offers");
         return;
       }
       if (d.endDateTime && new Date(d.endDateTime) <= new Date(d.startDateTime)) {
         toast.error("Discount end date must be after its start date");
+        setCreateActiveTab("offers");
         return;
       }
     }
@@ -1241,10 +1275,12 @@ export default function ProductsPage() {
     for (const p of draftPromotions) {
       if (!p.regionId) {
         toast.error("Please select a region for every promotion row");
+        setCreateActiveTab("offers");
         return;
       }
       if (seenPromotionRegions.has(p.regionId)) {
         toast.error("Only one promotion is allowed per region.");
+        setCreateActiveTab("offers");
         return;
       }
       seenPromotionRegions.add(p.regionId);
@@ -1253,14 +1289,17 @@ export default function ProductsPage() {
         const percentage = Number(p.welcomeDiscountPercentage);
         if (!p.welcomeDiscountPercentage || percentage <= 0) {
           toast.error("An active welcome offer requires a discount greater than zero");
+          setCreateActiveTab("offers");
           return;
         }
         if (!p.welcomeOfferStartAt || !p.welcomeOfferEndAt) {
           toast.error("Welcome offer start and end date/time are required when active");
+          setCreateActiveTab("offers");
           return;
         }
         if (new Date(p.welcomeOfferEndAt) <= new Date(p.welcomeOfferStartAt)) {
           toast.error("Welcome offer end date must be after its start date");
+          setCreateActiveTab("offers");
           return;
         }
       }
@@ -1361,6 +1400,30 @@ export default function ProductsPage() {
   };
 
   const perfumeType = watch("perfumeType");
+  const watchedSortOrder = watch("sortOrder");
+  const watchedTranslations = watch("translations");
+
+  // Basic Info, Images, and Translations are mandatory — Next (or Create
+  // Product, on the last tab) stays disabled until each is actually filled
+  // in. Sizes and Offers are optional, so they never block progress.
+  const isBasicInfoTabComplete = Number.isFinite(watchedSortOrder);
+  const isImagesTabComplete = !!thumbnail;
+  const isTranslationsTabComplete = (() => {
+    const englishLang = languages?.find((l) => l.code === "en");
+    const hasEnglish = watchedTranslations?.some((t) => Number(t.languageId) === englishLang?.id);
+    if (!hasEnglish) return false;
+    return watchedTranslations.every(
+      (t) => t.languageId && t.categoryId && t.title.trim() !== "" && t.description.trim() !== ""
+    );
+  })();
+  const isCreateTabComplete: Record<string, boolean> = {
+    basic: isBasicInfoTabComplete,
+    images: isImagesTabComplete,
+    sizes: true,
+    offers: true,
+    translations: isTranslationsTabComplete,
+  };
+  const canAdvanceFromCreateTab = isCreateTabComplete[createActiveTab] ?? true;
 
   return (
     <div className="space-y-6 p-6">
@@ -1424,7 +1487,7 @@ export default function ProductsPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
@@ -1451,7 +1514,7 @@ export default function ProductsPage() {
           if (!open) setSizeToDelete(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
@@ -1478,7 +1541,7 @@ export default function ProductsPage() {
           if (!open) setPriceToDelete(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
@@ -1505,7 +1568,7 @@ export default function ProductsPage() {
           if (!open) setDiscountToDelete(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
@@ -1532,7 +1595,7 @@ export default function ProductsPage() {
           if (!open) setPromotionToDelete(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
@@ -1559,7 +1622,7 @@ export default function ProductsPage() {
           if (!open) setTranslationToDelete(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
@@ -3242,7 +3305,7 @@ export default function ProductsPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-4 flex flex-col">
+          <form onSubmit={handleSubmit(onSubmit, onCreateFormInvalid)} className="mt-4 flex flex-col">
             <Tabs value={createActiveTab} onValueChange={setCreateActiveTab}>
               {/* Mobile: dropdown instead of tab row */}
               <Select value={createActiveTab} onValueChange={setCreateActiveTab}>
@@ -3342,7 +3405,7 @@ export default function ProductsPage() {
                           type="number"
                           step="1"
                           {...register("sortOrder", { required: true, valueAsNumber: true })}
-                          placeholder="0"
+                          placeholder="1"
                         />
                       </div>
                     </div>
@@ -4028,23 +4091,48 @@ export default function ProductsPage() {
                   setOpenForm(false);
                   resetForm();
                 }}
+                className="sm:mr-auto"
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isUploading || createMutation.isPending}
-                className="bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600"
-              >
-                {isUploading || createMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {isUploading ? "Uploading images..." : "Creating..."}
-                  </>
-                ) : (
-                  "Create Product"
-                )}
-              </Button>
+              {!isFirstCreateTab && (
+                <Button type="button" variant="outline" onClick={goToPrevCreateTab}>
+                  Back
+                </Button>
+              )}
+              {isLastCreateTab ? (
+                <Button
+                  type="submit"
+                  disabled={isUploading || createMutation.isPending || !isTranslationsTabComplete}
+                  title={!isTranslationsTabComplete ? "Add an English translation with a title and description first" : undefined}
+                  className="bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600"
+                >
+                  {isUploading || createMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {isUploading ? "Uploading images..." : "Creating..."}
+                    </>
+                  ) : (
+                    "Create Product"
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={goToNextCreateTab}
+                  disabled={!canAdvanceFromCreateTab}
+                  title={
+                    !canAdvanceFromCreateTab
+                      ? createActiveTab === "basic"
+                        ? "Enter a valid sort order first"
+                        : "A thumbnail is required first"
+                      : undefined
+                  }
+                  className="bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600"
+                >
+                  Next
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </DialogContent>

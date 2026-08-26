@@ -151,7 +151,7 @@ export default function OrdersPage() {
           if (!open) setOrderToDelete(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>

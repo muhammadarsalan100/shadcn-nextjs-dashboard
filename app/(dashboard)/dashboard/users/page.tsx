@@ -69,7 +69,7 @@ export default function UsersPage() {
           if (!open) setUserToDelete(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>

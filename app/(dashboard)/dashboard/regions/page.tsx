@@ -19,7 +19,6 @@ import { Switch } from "@/components/ui/switch";
 type RegionFormValues = {
   name: string;
   currencyCode: string;
-  conversionRate: number;
   shippingAmount: number;
   active: boolean;
 };
@@ -55,7 +54,6 @@ export default function RegionsPage() {
     defaultValues: {
       name: "",
       currencyCode: "",
-      conversionRate: 1,
       shippingAmount: 0,
       active: true
     },
@@ -68,7 +66,6 @@ export default function RegionsPage() {
     reset({
       name: region.name,
       currencyCode: region.currencyCode,
-      conversionRate: region.conversionRate,
       shippingAmount: region.shippingAmount,
       active: region.active
     });
@@ -80,7 +77,6 @@ export default function RegionsPage() {
     reset({
       name: "",
       currencyCode: "",
-      conversionRate: 1,
       shippingAmount: 0,
       active: true
     });
@@ -96,7 +92,6 @@ export default function RegionsPage() {
           data: {
             name: data.name,
             currencyCode: data.currencyCode,
-            conversionRate: Number(data.conversionRate),
             shippingAmount: Number(data.shippingAmount),
             timeZoneOffsetMinutes: currentRegion.timeZoneOffsetMinutes,
             active: data.active
@@ -110,7 +105,6 @@ export default function RegionsPage() {
         {
           name: data.name,
           currencyCode: data.currencyCode,
-          conversionRate: Number(data.conversionRate),
           shippingAmount: Number(data.shippingAmount),
           timeZoneOffsetMinutes: 0,
           active: data.active
@@ -240,26 +234,6 @@ export default function RegionsPage() {
                 maxLength={3}
               />
               {errors.currencyCode && <p className="text-red-500 text-sm">{errors.currencyCode.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="block font-medium">Conversion Rate</label>
-              <Input
-                type="number"
-                step="0.01"
-                {...register("conversionRate", { 
-                  required: "Conversion rate is required",
-                  valueAsNumber: true,
-                  min: {
-                    value: 1,
-                    message: "Conversion rate must be at least 1"
-                  }
-                })}
-                placeholder="e.g. 1.00"
-              />
-              {errors.conversionRate && (
-                <p className="text-red-500 text-sm">{errors.conversionRate.message}</p>
-              )}
             </div>
 
             <div className="space-y-2">

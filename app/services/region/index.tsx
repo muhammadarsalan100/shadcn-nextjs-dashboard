@@ -5,7 +5,6 @@ export type Region = {
   id: number;
   name: string;
   currencyCode: string;
-  conversionRate: number;
   shippingAmount: number;
   timeZoneOffsetMinutes: number;
   active: boolean;
@@ -14,7 +13,6 @@ export type Region = {
 export type CreateRegionInput = {
   name: string;
   currencyCode: string;
-  conversionRate: number;
   shippingAmount: number;
   timeZoneOffsetMinutes: number;
   active?: boolean;
@@ -23,7 +21,6 @@ export type CreateRegionInput = {
 export type UpdateRegionInput = {
   name?: string;
   currencyCode?: string;
-  conversionRate?: number;
   shippingAmount?: number;
   timeZoneOffsetMinutes?: number;
   active?: boolean;

@@ -12,6 +12,7 @@ import {
 	Languages,
 	Package,
 	ShoppingCart,
+	GalleryHorizontal,
 	X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,12 @@ const sidebarGroups = [
 				title: "Orders",
 				href: "/dashboard/orders",
 				icon: ShoppingCart,
+				badge: null,
+			},
+			{
+				title: "Homepage Content",
+				href: "/dashboard/homepage-content",
+				icon: GalleryHorizontal,
 				badge: null,
 			},
 		],

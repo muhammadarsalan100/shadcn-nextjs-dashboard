@@ -24,7 +24,7 @@ export type ProductSize = {
 
 export type ProductTranslation = {
   languageId: number;
-  categoryId: number;
+  categoryId?: number | null;
   title: string;
   description: string;
 };
@@ -162,7 +162,7 @@ export type ProductDetails = {
     category: {
       id: number;
       name: string;
-    };
+    } | null;
     language: {
       id: number;
       name: string;

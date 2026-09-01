@@ -912,12 +912,12 @@ export default function ProductsPage() {
     id: number;
     title: string;
     description: string;
-    category: { id: number; name: string };
+    category: { id: number; name: string } | null;
   }) => {
     setEditingTranslationId(translation.id);
     setEditTranslationTitle(translation.title);
     setEditTranslationDescription(translation.description);
-    setEditTranslationCategoryId(translation.category.id);
+    setEditTranslationCategoryId(translation.category?.id ?? null);
   };
 
   const handleUpdateTranslation = () => {
@@ -929,7 +929,9 @@ export default function ProductsPage() {
         data: {
           title: editTranslationTitle,
           description: editTranslationDescription,
-          categoryId: editTranslationCategoryId || undefined,
+          // Send null explicitly to clear an existing category, rather than
+          // omitting the field (which would leave the current one untouched).
+          categoryId: editTranslationCategoryId,
         },
       },
       {
@@ -962,7 +964,7 @@ export default function ProductsPage() {
   };
 
   const handleAddTranslation = () => {
-    if (!editProductId || !newTranslationLanguageId || !newTranslationCategoryId) {
+    if (!editProductId || !newTranslationLanguageId) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -971,7 +973,7 @@ export default function ProductsPage() {
       {
         productId: editProductId,
         languageId: newTranslationLanguageId,
-        categoryId: newTranslationCategoryId,
+        categoryId: newTranslationCategoryId ?? undefined,
         title: newTranslationTitle,
         description: newTranslationDescription,
       },
@@ -1342,7 +1344,7 @@ export default function ProductsPage() {
         })),
         translations: data.translations.map((t) => ({
           languageId: Number(t.languageId),
-          categoryId: Number(t.categoryId),
+          categoryId: t.categoryId && t.categoryId !== "none" ? Number(t.categoryId) : undefined,
           title: t.title,
           description: t.description,
         })),
@@ -1422,7 +1424,7 @@ export default function ProductsPage() {
     const hasEnglish = watchedTranslations?.some((t) => Number(t.languageId) === englishLang?.id);
     if (!hasEnglish) return false;
     return watchedTranslations.every(
-      (t) => t.languageId && t.categoryId && t.title.trim() !== "" && t.description.trim() !== ""
+      (t) => t.languageId && t.title.trim() !== "" && t.description.trim() !== ""
     );
   })();
   const isCreateTabComplete: Record<string, boolean> = {
@@ -3124,16 +3126,17 @@ export default function ProductsPage() {
                             </Select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs font-medium">Category *</label>
+                            <label className="text-xs font-medium">Category</label>
                             <Select
-                              value={newTranslationCategoryId?.toString() || ""}
-                              onValueChange={(v) => setNewTranslationCategoryId(Number(v))}
+                              value={newTranslationCategoryId?.toString() || "none"}
+                              onValueChange={(v) => setNewTranslationCategoryId(v === "none" ? null : Number(v))}
                               disabled={!newTranslationLanguageId}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select category" />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="none">No category</SelectItem>
                                 {categories
                                   ?.filter((cat) => cat.language.id === newTranslationLanguageId)
                                   .map((cat) => (
@@ -3205,7 +3208,11 @@ export default function ProductsPage() {
                           <div className="flex items-center gap-2">
                             {editingTranslationId !== translation.id && (
                               <>
-                                <Badge variant="secondary">{translation.category.name}</Badge>
+                                {translation.category ? (
+                                  <Badge variant="secondary">{translation.category.name}</Badge>
+                                ) : (
+                                  <Badge variant="outline">No category</Badge>
+                                )}
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -3232,13 +3239,14 @@ export default function ProductsPage() {
                             <div className="space-y-1">
                               <label className="text-xs font-medium">Category</label>
                               <Select
-                                value={editTranslationCategoryId?.toString() || ""}
-                                onValueChange={(v) => setEditTranslationCategoryId(Number(v))}
+                                value={editTranslationCategoryId?.toString() || "none"}
+                                onValueChange={(v) => setEditTranslationCategoryId(v === "none" ? null : Number(v))}
                               >
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
+                                  <SelectItem value="none">No category</SelectItem>
                                   {categories
                                     ?.filter((cat) => cat.language.id === translation.language.id)
                                     .map((cat) => (
@@ -4103,11 +4111,11 @@ export default function ProductsPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-medium">Category *</label>
+                        <label className="text-xs font-medium">Category</label>
                         <Select
-                          value={watch(`translations.${index}.categoryId`)}
+                          value={watch(`translations.${index}.categoryId`) || "none"}
                           onValueChange={(value) =>
-                            setValue(`translations.${index}.categoryId`, value)
+                            setValue(`translations.${index}.categoryId`, value === "none" ? "" : value)
                           }
                           disabled={!watch(`translations.${index}.languageId`)}
                         >
@@ -4115,6 +4123,7 @@ export default function ProductsPage() {
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="none">No category</SelectItem>
                             {categories
                               ?.filter(
                                 (cat) =>

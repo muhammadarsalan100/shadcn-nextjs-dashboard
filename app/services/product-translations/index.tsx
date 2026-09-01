@@ -5,7 +5,7 @@ export type ProductTranslation = {
   id: number;
   productId: number;
   languageId: number;
-  categoryId: number | null;
+  categoryId: number;
   title: string;
   description: string;
 };
@@ -13,13 +13,13 @@ export type ProductTranslation = {
 export type CreateProductTranslationInput = {
   productId: number;
   languageId: number;
-  categoryId?: number | null;
+  categoryId: number;
   title: string;
   description: string;
 };
 
 export type UpdateProductTranslationInput = {
-  categoryId?: number | null;
+  categoryId?: number;
   title?: string;
   description?: string;
 };

@@ -24,14 +24,14 @@ export type ProductSize = {
 
 export type ProductTranslation = {
   languageId: number;
-  categoryId?: number | null;
+  categoryId: number;
   title: string;
   description: string;
 };
 
 export type CreateProductInput = {
   discountPercentage?: number;
-  perfumeType: "male" | "female" | "unisex";
+  perfumeType?: "male" | "female" | "unisex" | null;
   sortOrder: number;
   thumbnail: ImageData;
   images?: ImageData[];
@@ -141,7 +141,7 @@ export async function getProducts(): Promise<Product[]> {
 // Full product details type (from admin endpoint)
 export type ProductDetails = {
   id: number;
-  perfumeType: "male" | "female" | "unisex";
+  perfumeType: "male" | "female" | "unisex" | null;
   discountPercentage: string;
   sortOrder: number | null;
   thumbnailUrl: string | null;
@@ -162,7 +162,7 @@ export type ProductDetails = {
     category: {
       id: number;
       name: string;
-    } | null;
+    };
     language: {
       id: number;
       name: string;
@@ -191,7 +191,7 @@ export async function deleteProduct(id: number): Promise<{ message: string }> {
 
 // Update product input type
 export type UpdateProductInput = {
-  perfumeType?: "male" | "female" | "unisex";
+  perfumeType?: "male" | "female" | "unisex" | null;
   discountPercentage?: number;
   sortOrder?: number;
   active?: boolean;

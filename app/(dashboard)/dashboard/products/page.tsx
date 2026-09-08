@@ -140,9 +140,6 @@ type DraftPromotion = {
   welcomeOfferEndAt: string;
 };
 
-// Predefined size options
-const SIZE_OPTIONS = ["30ml", "50ml", "75ml", "100ml", "150ml", "200ml", "250ml", "500ml"];
-
 // Steps for the create-product wizard, in order. Sizes and Offers are
 // optional — Next just moves on, nothing there blocks progress.
 const CREATE_STEPS = [
@@ -493,7 +490,7 @@ export default function ProductsPage() {
 
   const handleEditSizeClick = (size: { id: number; size: string; stock: number }) => {
     setEditingSizeId(size.id);
-    setEditSizeValue(size.size);
+    setEditSizeValue(size.size.replace(/ml$/i, ""));
     setEditSizeStock(size.stock);
   };
 
@@ -501,7 +498,13 @@ export default function ProductsPage() {
     if (!editingSizeId) return;
 
     if (!editSizeValue || editSizeValue.trim() === "") {
-      toast.error("Please select a size");
+      toast.error("Please enter a size");
+      return;
+    }
+
+    const finalSize = `${editSizeValue.trim()}ml`;
+    if (finalSize.length <= 3) {
+      toast.error("Size must be more than 3 characters");
       return;
     }
 
@@ -509,7 +512,7 @@ export default function ProductsPage() {
       {
         id: editingSizeId,
         data: {
-          size: editSizeValue,
+          size: finalSize,
           stock: editSizeStock,
         },
       },
@@ -534,15 +537,21 @@ export default function ProductsPage() {
   };
 
   const handleAddSizeInEdit = () => {
-    if (!editProductId || !newEditSizeValue) {
-      toast.error("Please select a size");
+    if (!editProductId || !newEditSizeValue || newEditSizeValue.trim() === "") {
+      toast.error("Please enter a size");
+      return;
+    }
+
+    const finalSize = `${newEditSizeValue.trim()}ml`;
+    if (finalSize.length <= 3) {
+      toast.error("Size must be more than 3 characters");
       return;
     }
 
     createSizeMutation.mutate(
       {
         productId: editProductId,
-        size: newEditSizeValue,
+        size: finalSize,
         stock: newEditSizeStock,
       },
       {
@@ -1242,7 +1251,12 @@ export default function ProductsPage() {
     const seenSizeNames = new Set<string>();
     for (const s of draftSizes) {
       if (!s.size || s.size.trim() === "") {
-        toast.error("Please select a size for every size row");
+        toast.error("Please enter a size for every size row");
+        setCreateActiveTab("sizes");
+        return;
+      }
+      if (`${s.size.trim()}ml`.length <= 3) {
+        toast.error(`Size "${s.size}ml" must be more than 3 characters`);
         setCreateActiveTab("sizes");
         return;
       }
@@ -1333,7 +1347,7 @@ export default function ProductsPage() {
         thumbnail: thumbnailData,
         images: imagesData.length > 0 ? imagesData : undefined,
         sizes: draftSizes.map((s) => ({
-          size: s.size || null,
+          size: s.size ? `${s.size}ml` : null,
           stock: Number(s.stock),
           regionalPrices: s.regionalPrices.map((rp) => ({
             regionId: Number(rp.regionId),
@@ -2243,16 +2257,18 @@ export default function ProductsPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <Label className="text-xs font-medium">Size *</Label>
-                            <Select value={newEditSizeValue} onValueChange={setNewEditSizeValue}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select size" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {SIZE_OPTIONS.map((s) => (
-                                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="relative">
+                              <Input
+                                inputMode="numeric"
+                                value={newEditSizeValue}
+                                onChange={(e) => setNewEditSizeValue(e.target.value.replace(/\D/g, ""))}
+                                placeholder="e.g. 100"
+                                className="pr-8"
+                              />
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                ml
+                              </span>
+                            </div>
                           </div>
                           <div className="space-y-1">
                             <Label className="text-xs font-medium">Stock *</Label>
@@ -2314,18 +2330,18 @@ export default function ProductsPage() {
                               <div className="flex items-center justify-between gap-2">
                                 {editingSizeId === size.id ? (
                                   <div className="flex flex-1 flex-wrap items-center gap-2">
-                                    <Select value={editSizeValue} onValueChange={setEditSizeValue}>
-                                      <SelectTrigger className="w-28">
-                                        <SelectValue placeholder="Size" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {SIZE_OPTIONS.map((option) => (
-                                          <SelectItem key={option} value={option}>
-                                            {option}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
+                                    <div className="relative w-28">
+                                      <Input
+                                        inputMode="numeric"
+                                        value={editSizeValue}
+                                        onChange={(e) => setEditSizeValue(e.target.value.replace(/\D/g, ""))}
+                                        className="pr-8"
+                                        placeholder="Size"
+                                      />
+                                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                        ml
+                                      </span>
+                                    </div>
                                     <Input
                                       type="number"
                                       min="0"
@@ -3626,21 +3642,20 @@ export default function ProductsPage() {
                       <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-3 border-b bg-muted/50">
                         <div className="flex-1 space-y-1">
                           <label className="text-xs font-medium">Size *</label>
-                          <Select
-                            value={sizeDraft.size}
-                            onValueChange={(value) => updateDraftSize(sizeDraft.key, { size: value })}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select size" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {SIZE_OPTIONS.map((size) => (
-                                <SelectItem key={size} value={size}>
-                                  {size}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="relative">
+                            <Input
+                              inputMode="numeric"
+                              value={sizeDraft.size}
+                              onChange={(e) =>
+                                updateDraftSize(sizeDraft.key, { size: e.target.value.replace(/\D/g, "") })
+                              }
+                              placeholder="e.g. 100"
+                              className="pr-8"
+                            />
+                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                              ml
+                            </span>
+                          </div>
                         </div>
                         <div className="w-full sm:w-32 space-y-1">
                           <label className="text-xs font-medium">Stock *</label>

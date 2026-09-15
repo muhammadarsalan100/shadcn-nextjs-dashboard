@@ -1,5 +1,5 @@
 "use client";
-import { Bell, Menu, Search, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AppSwitcher } from "./app-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getUser, logout } from "@/lib/auth";
 import { useEffect, useState } from "react";
@@ -117,26 +116,8 @@ export function Topbar({ onMenuClick }: TopbarProps) {
 
 			{/* Right Section */}
 			<div className="flex items-center gap-1 sm:gap-3 shrink-0">
-				{/* App Switcher */}
-				<div className="hidden sm:block">
-					<AppSwitcher />
-				</div>
-
 				{/* Theme Toggle */}
 				<ThemeToggle />
-
-				{/* Notifications */}
-				<Button
-					variant="ghost"
-					size="icon"
-					className="relative h-9 w-9 hover:bg-muted transition-colors hidden sm:inline-flex"
-					aria-label="Notifications"
-				>
-					<Bell className="h-4 w-4" />
-					<span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-medium">
-						3
-					</span>
-				</Button>
 
 				{/* Profile */}
 				<DropdownMenu>

@@ -27,6 +27,9 @@ export function useCreateProductSize() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["product-sizes"] });
+      // A new size is created with its regional prices in one backend call,
+      // so the prices list needs refreshing too or the new size shows as unpriced.
+      queryClient.invalidateQueries({ queryKey: ["product-region-prices"] });
     },
   });
 }

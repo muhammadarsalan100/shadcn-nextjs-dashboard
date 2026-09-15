@@ -162,9 +162,6 @@ export function Topbar({ onMenuClick }: TopbarProps) {
 						<DropdownMenuItem className="p-3 cursor-pointer hover:bg-muted rounded-md transition-colors">
 							<span className="flex items-center gap-2">👤 Profile</span>
 						</DropdownMenuItem>
-						<DropdownMenuItem className="p-3 cursor-pointer hover:bg-muted rounded-md transition-colors">
-							<span className="flex items-center gap-2">⚙️ Settings</span>
-						</DropdownMenuItem>
 						<DropdownMenuSeparator className="my-2" />
 						<DropdownMenuItem
 							onClick={handleLogout}

@@ -127,7 +127,7 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
 							<LayoutDashboard className="w-4 h-4 text-primary-foreground" />
 						</div>
 						<span className="text-xl font-bold group-hover:text-primary transition-colors">
-							Dashboard
+							Ramik Admin Dashboard
 						</span>
 					</Link>
 				)}

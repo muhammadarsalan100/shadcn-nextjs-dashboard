@@ -19,6 +19,8 @@ export type CreateProductSizeInput = {
   productId: number;
   size: string;
   stock: number;
+  // Backend requires at least one regional price up front when creating a size.
+  regionalPrices: { regionId: number; price: number }[];
 };
 
 export type UpdateProductSizeInput = {

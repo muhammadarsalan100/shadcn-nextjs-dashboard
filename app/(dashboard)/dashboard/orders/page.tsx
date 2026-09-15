@@ -38,6 +38,9 @@ import {
   Order,
   ORDER_STATUSES,
   formatOrderMoney,
+  getOrderItemLineTotal,
+  getOrderItemOriginalPrice,
+  getOrderItemUnitPrice,
   getOrderStatusLabel,
   getPaymentMethodLabel,
   getPaymentStatusLabel,
@@ -266,8 +269,9 @@ export default function OrdersPage() {
                 <div className="divide-y rounded-2xl border overflow-hidden">
                   {orderToView.items?.map((item) => {
                     const discount = Number(item.discountPercentage) || 0;
-                    const finalPrice = Number(item.finalPrice) || 0;
-                    const originalPrice = Number(item.price) || finalPrice;
+                    const finalPrice = getOrderItemUnitPrice(item);
+                    const originalPrice = getOrderItemOriginalPrice(item);
+                    const lineTotal = getOrderItemLineTotal(item);
                     return (
                       <div
                         key={item.id}
@@ -293,11 +297,14 @@ export default function OrdersPage() {
                         <div className="shrink-0 text-right">
                           {discount > 0 && (
                             <p className="text-xs text-muted-foreground line-through">
-                              {formatOrderMoney(originalPrice, orderToView.currency)}
+                              {formatOrderMoney(originalPrice * item.quantity, orderToView.currency)}
                             </p>
                           )}
                           <p className="font-semibold">
-                            {formatOrderMoney(finalPrice, orderToView.currency)}
+                            {formatOrderMoney(lineTotal, orderToView.currency)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatOrderMoney(finalPrice, orderToView.currency)} each
                           </p>
                           {discount > 0 && (
                             <span className="mt-0.5 inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">

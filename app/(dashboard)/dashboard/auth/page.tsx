@@ -1,7 +1,7 @@
 "use client";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LogIn, UserPlus, Lock, Mail, Shield, Key } from "lucide-react";
+import { LogIn, Lock, Mail, Shield, Key } from "lucide-react";
 import Link from "next/link";
 
 const authPages = [
@@ -10,13 +10,6 @@ const authPages = [
 		description: "A classic login form with email and password fields.",
 		icon: LogIn,
 		href: "/login",
-		status: "Ready",
-	},
-	{
-		title: "Register",
-		description: "A registration form to sign up new users.",
-		icon: UserPlus,
-		href: "/register",
 		status: "Ready",
 	},
 	{

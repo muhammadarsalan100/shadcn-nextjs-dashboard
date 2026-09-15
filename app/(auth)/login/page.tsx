@@ -21,12 +21,10 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
 import { LogIn, Mail, Lock } from "lucide-react";
-import Link from "next/link";
 import { login } from "@/lib/auth";
 
 const formSchema = z.object({
@@ -132,25 +130,6 @@ export default function LoginPage() {
 					</form>
 				</Form>
 			</CardContent>
-			<CardFooter className="flex flex-col gap-4">
-				<div className="text-center text-sm">
-					<Link
-						href="/forgot-password"
-						className="text-blue-600 hover:text-blue-800 underline"
-					>
-						Forgot your password?
-					</Link>
-				</div>
-				<div className="text-center text-sm">
-					Don&apos;t have an account?{" "}
-					<Link
-						href="/register"
-						className="text-blue-600 hover:text-blue-800 underline"
-					>
-						Sign up
-					</Link>
-				</div>
-			</CardFooter>
 		</Card>
 	);
 }

@@ -3,6 +3,8 @@ import autoTable from "jspdf-autotable";
 import {
   Order,
   formatOrderMoney,
+  getOrderItemLineTotal,
+  getOrderItemUnitPrice,
   getOrderStatusLabel,
   getPaymentMethodLabel,
   getPaymentStatusLabel,
@@ -113,8 +115,8 @@ export async function downloadOrderReceipt(order: Order) {
 
   const itemRows = (order.items || []).map((item) => {
     const discount = Number(item.discountPercentage) || 0;
-    const finalPrice = Number(item.finalPrice) || 0;
-    const lineTotal = finalPrice * (item.quantity || 1);
+    const finalPrice = getOrderItemUnitPrice(item);
+    const lineTotal = getOrderItemLineTotal(item);
     const productName = (item.productName || "").trim();
     const size = (item.size || "").trim();
     return [

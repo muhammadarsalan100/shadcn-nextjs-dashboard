@@ -44,6 +44,22 @@ export type UpdateOrderInput = {
   customerEmail?: string;
 };
 
+export type OrderItemPricingTier = {
+  quantity: number;
+  unitPrice: number;
+  discountPercentage: number;
+  finalPrice: number;
+  totalPrice: number;
+};
+
+export type OrderItemPricing = {
+  regular: OrderItemPricingTier | null;
+  welcomeOffer: OrderItemPricingTier | null;
+  totalPrice: number;
+  lineDiscount: number;
+  currencyCode: string;
+};
+
 export type OrderItem = {
   id: number;
   productId?: number;
@@ -55,7 +71,27 @@ export type OrderItem = {
   discountPercentage: string | number;
   finalPrice: string | number;
   thumbnailUrl?: string | null;
+  pricing?: OrderItemPricing | null;
 };
+
+export function getOrderItemUnitPrice(item: OrderItem): number {
+  const tier = item.pricing?.regular ?? item.pricing?.welcomeOffer;
+  if (tier) return Number(tier.finalPrice) || Number(tier.unitPrice) || 0;
+  return Number(item.finalPrice) || Number(item.price) || 0;
+}
+
+export function getOrderItemOriginalPrice(item: OrderItem): number {
+  const tier = item.pricing?.regular ?? item.pricing?.welcomeOffer;
+  if (tier) return Number(tier.unitPrice) || 0;
+  return Number(item.price) || getOrderItemUnitPrice(item);
+}
+
+export function getOrderItemLineTotal(item: OrderItem): number {
+  const tier = item.pricing?.regular ?? item.pricing?.welcomeOffer;
+  if (item.pricing?.totalPrice != null) return Number(item.pricing.totalPrice) || 0;
+  if (tier?.totalPrice != null) return Number(tier.totalPrice) || 0;
+  return getOrderItemUnitPrice(item) * (Number(item.quantity) || 1);
+}
 
 export type OrderPayment = {
   id: number;

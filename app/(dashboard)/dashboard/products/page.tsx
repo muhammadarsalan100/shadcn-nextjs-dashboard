@@ -159,6 +159,23 @@ function toDatetimeLocalValue(iso: string | null): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+// The "active" flag on a promotion/discount only records whether it was turned on when
+// saved — it doesn't get flipped off once its end date passes. Derive the real,
+// time-aware state so the UI doesn't keep showing "Active" for an offer that has expired.
+type TimeWindowStatus = "active" | "scheduled" | "expired" | "inactive";
+
+function getTimeWindowStatus(
+  enabled: boolean,
+  startAt: string | null | undefined,
+  endAt: string | null | undefined
+): TimeWindowStatus {
+  if (!enabled) return "inactive";
+  const now = Date.now();
+  if (startAt && new Date(startAt).getTime() > now) return "scheduled";
+  if (endAt && new Date(endAt).getTime() < now) return "expired";
+  return "active";
+}
+
 export default function ProductsPage() {
   const { data: languages } = useLanguages();
   const { data: categories } = useCategories();
@@ -244,9 +261,15 @@ export default function ProductsPage() {
 
 
   // Add size state (for edit dialog)
+  // The backend requires a price for every active region when creating a size,
+  // so prices are collected as a list here (one row per region) rather than a
+  // single field — same pattern as the create-product wizard's draft sizes.
   const [showAddSizeInEdit, setShowAddSizeInEdit] = useState(false);
   const [newEditSizeValue, setNewEditSizeValue] = useState("");
   const [newEditSizeStock, setNewEditSizeStock] = useState(0);
+  const [newEditSizeRegionalPrices, setNewEditSizeRegionalPrices] = useState<DraftRegionalPrice[]>([]);
+  const [newEditSizePendingRegionId, setNewEditSizePendingRegionId] = useState("");
+  const [newEditSizePendingPrice, setNewEditSizePendingPrice] = useState("");
 
   // Edit size state
   const [editingSizeId, setEditingSizeId] = useState<number | null>(null);
@@ -536,6 +559,33 @@ export default function ProductsPage() {
     setEditSizeStock(0);
   };
 
+  const commitEditSizeRegionalPrice = () => {
+    if (!newEditSizePendingRegionId || newEditSizePendingPrice === "") return;
+    setNewEditSizeRegionalPrices((prev) => [
+      ...prev,
+      {
+        key: `${Date.now()}-${newEditSizePendingRegionId}`,
+        regionId: newEditSizePendingRegionId,
+        price: newEditSizePendingPrice,
+      },
+    ]);
+    setNewEditSizePendingRegionId("");
+    setNewEditSizePendingPrice("");
+  };
+
+  const removeEditSizeRegionalPrice = (key: string) => {
+    setNewEditSizeRegionalPrices((prev) => prev.filter((rp) => rp.key !== key));
+  };
+
+  const resetAddSizeInEditForm = () => {
+    setShowAddSizeInEdit(false);
+    setNewEditSizeValue("");
+    setNewEditSizeStock(0);
+    setNewEditSizeRegionalPrices([]);
+    setNewEditSizePendingRegionId("");
+    setNewEditSizePendingPrice("");
+  };
+
   const handleAddSizeInEdit = () => {
     if (!editProductId || !newEditSizeValue || newEditSizeValue.trim() === "") {
       toast.error("Please enter a size");
@@ -548,18 +598,38 @@ export default function ProductsPage() {
       return;
     }
 
+    // Fold in a region/price the user typed but forgot to click "Add Price" for,
+    // instead of making them lose it and re-enter it.
+    const allRegionalPrices =
+      newEditSizePendingRegionId && newEditSizePendingPrice !== ""
+        ? [
+            ...newEditSizeRegionalPrices,
+            { key: "pending", regionId: newEditSizePendingRegionId, price: newEditSizePendingPrice },
+          ]
+        : newEditSizeRegionalPrices;
+
+    // At least one regional price is required to create a size — the rest can
+    // be added later from the size card.
+    if (allRegionalPrices.length === 0) {
+      toast.error("Add a price for at least one region");
+      return;
+    }
+
     createSizeMutation.mutate(
       {
         productId: editProductId,
         size: finalSize,
         stock: newEditSizeStock,
+        regionalPrices: allRegionalPrices.map((rp) => ({
+          regionId: Number(rp.regionId),
+          price: Number(rp.price),
+        })),
       },
       {
-        onSuccess: () => {
+        onSuccess: (newSize) => {
           toast.success("Size added successfully");
-          setShowAddSizeInEdit(false);
-          setNewEditSizeValue("");
-          setNewEditSizeStock(0);
+          resetAddSizeInEditForm();
+          setExpandedSizeIds((prev) => new Set(prev).add(newSize.id));
         },
         onError: (error) => {
           toast.error(error instanceof Error ? error.message : "Failed to add size");
@@ -2254,7 +2324,7 @@ export default function ProductsPage() {
                   {showAddSizeInEdit && (
                     <Card className="border-amber-500/50 bg-amber-500/5">
                       <CardContent className="pt-4 space-y-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <Label className="text-xs font-medium">Size *</Label>
                             <div className="relative">
@@ -2280,36 +2350,119 @@ export default function ProductsPage() {
                               placeholder="0"
                             />
                           </div>
-                          <div className="flex items-end gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex-1"
-                              onClick={() => {
-                                setShowAddSizeInEdit(false);
-                                setNewEditSizeValue("");
-                                setNewEditSizeStock(0);
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={handleAddSizeInEdit}
-                              disabled={createSizeMutation.isPending}
-                              className="flex-1 bg-green-600 hover:bg-green-700"
-                            >
-                              {createSizeMutation.isPending ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                "Add"
-                              )}
-                            </Button>
-                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Add its regional prices from the size card below once it&apos;s created.
-                        </p>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium">
+                            Regional prices * (at least one required)
+                          </Label>
+
+                          {newEditSizeRegionalPrices.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                              {newEditSizeRegionalPrices.map((rp) => {
+                                const region = activeRegions.find((r) => String(r.id) === rp.regionId);
+                                return (
+                                  <div
+                                    key={rp.key}
+                                    className="flex items-center justify-between rounded-md border bg-background px-3 py-2"
+                                  >
+                                    <div className="flex items-center gap-1.5 text-sm">
+                                      <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                                      <span className="font-medium">{region?.name ?? "Region"}</span>
+                                      <Badge variant="secondary" className="text-[10px] px-1.5">
+                                        {region?.currencyCode}
+                                      </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-semibold text-amber-600">{rp.price}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => removeEditSizeRegionalPrice(rp.key)}
+                                        className="text-muted-foreground hover:text-destructive transition-colors"
+                                      >
+                                        <X className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {(() => {
+                            const remainingRegions = activeRegions.filter(
+                              (r) => !newEditSizeRegionalPrices.some((rp) => rp.regionId === String(r.id))
+                            );
+                            if (remainingRegions.length === 0) return null;
+                            return (
+                              <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+                                <div className="flex-1 space-y-1">
+                                  <Label className="text-xs font-medium">Region</Label>
+                                  <Select
+                                    value={newEditSizePendingRegionId}
+                                    onValueChange={setNewEditSizePendingRegionId}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select region" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {remainingRegions.map((r) => (
+                                        <SelectItem key={r.id} value={String(r.id)}>
+                                          {r.name} ({r.currencyCode})
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="w-full sm:w-28 space-y-1">
+                                  <Label className="text-xs font-medium">Price</Label>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={newEditSizePendingPrice}
+                                    onChange={(e) => setNewEditSizePendingPrice(e.target.value)}
+                                    placeholder="0.00"
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-1 border-dashed"
+                                  onClick={commitEditSizeRegionalPrice}
+                                  disabled={!newEditSizePendingRegionId || newEditSizePendingPrice === ""}
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                  Add Price
+                                </Button>
+                              </div>
+                            );
+                          })()}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={resetAddSizeInEditForm}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleAddSizeInEdit}
+                            disabled={createSizeMutation.isPending}
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                          >
+                            {createSizeMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              "Add"
+                            )}
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   )}
@@ -2785,9 +2938,26 @@ export default function ProductsPage() {
                                     : " → no end date"}
                                 </div>
                                 <div className="flex items-center justify-between pt-1">
-                                  <Badge variant={discount.active ? "default" : "outline"} className="text-[10px]">
-                                    {discount.active ? "Active" : "Inactive"}
-                                  </Badge>
+                                  {(() => {
+                                    const status = getTimeWindowStatus(
+                                      discount.active,
+                                      discount.startDateTime,
+                                      discount.endDateTime
+                                    );
+                                    const label =
+                                      status === "active"
+                                        ? "Active"
+                                        : status === "scheduled"
+                                        ? "Scheduled"
+                                        : status === "expired"
+                                        ? "Expired"
+                                        : "Inactive";
+                                    return (
+                                      <Badge variant={status === "active" ? "default" : "outline"} className="text-[10px]">
+                                        {label}
+                                      </Badge>
+                                    );
+                                  })()}
                                   <div className="flex gap-1">
                                     <Button
                                       size="sm"
@@ -3055,9 +3225,29 @@ export default function ProductsPage() {
                                   <Gift className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
                                   {promotion.welcomeOfferActive ? (
                                     <div className="space-y-0.5">
-                                      <Badge variant="secondary" className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                        -{promotion.welcomeDiscountPercentage}% welcome offer
-                                      </Badge>
+                                      {(() => {
+                                        const status = getTimeWindowStatus(
+                                          promotion.welcomeOfferActive,
+                                          promotion.welcomeOfferStartAt,
+                                          promotion.welcomeOfferEndAt
+                                        );
+                                        return (
+                                          <Badge
+                                            variant="secondary"
+                                            className={
+                                              status === "active"
+                                                ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                                : status === "scheduled"
+                                                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                            }
+                                          >
+                                            -{promotion.welcomeDiscountPercentage}% welcome offer
+                                            {status === "scheduled" && " (scheduled)"}
+                                            {status === "expired" && " (expired)"}
+                                          </Badge>
+                                        );
+                                      })()}
                                       <p className="text-xs text-muted-foreground">
                                         {promotion.welcomeOfferStartAt
                                           ? new Date(promotion.welcomeOfferStartAt).toLocaleString()

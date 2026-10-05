@@ -179,24 +179,27 @@ function getTimeWindowStatus(
 export default function ProductsPage() {
   const { data: languages } = useLanguages();
   const { data: categories } = useCategories();
-  const { data: products, isLoading: productsLoading, isError: productsError } = useProducts();
+  const [productsPage, setProductsPage] = useState(1);
+  const [productsPageSize, setProductsPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const {
+    data: products,
+    isLoading: productsLoading,
+    isError: productsError,
+  } = useProducts({ page: productsPage, limit: productsPageSize });
   const { data: regions } = useRegions();
   const activeRegions = useMemo(() => (regions ?? []).filter((r) => r.active), [regions]);
 
-  const [productsPage, setProductsPage] = useState(1);
-  const [productsPageSize, setProductsPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const productsTotalPages = Math.max(
-    1,
-    Math.ceil((products?.length ?? 0) / productsPageSize)
-  );
-  const paginatedProducts = products?.slice(
-    (productsPage - 1) * productsPageSize,
-    productsPage * productsPageSize
-  );
   const handleProductsPageSizeChange = (size: number) => {
     setProductsPageSize(size);
     setProductsPage(1);
   };
+
+  useEffect(() => {
+    const totalPages = products?.totalPages ?? 1;
+    if (productsPage > totalPages) {
+      setProductsPage(totalPages);
+    }
+  }, [products?.totalPages, productsPage]);
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
   const deleteMutation = useDeleteProduct();
@@ -1569,22 +1572,22 @@ export default function ProductsPage() {
         <CardHeader>
           <CardTitle>All Products</CardTitle>
           <CardDescription>
-            {products?.length ?? 0} products in your catalog
+            {products?.totalResults ?? 0} products in your catalog
           </CardDescription>
         </CardHeader>
         <CardContent>
           <DataTable
-            data={paginatedProducts}
+            data={products?.data}
             columns={productColumns(handleEditClick, handleDeleteClick)}
             isLoading={productsLoading}
             error={productsError}
             emptyMessage="No products found. Add your first product to get started."
           />
           <Pagination
-            page={productsPage}
-            totalPages={productsTotalPages}
+            page={products?.page ?? productsPage}
+            totalPages={products?.totalPages ?? 1}
             onPageChange={setProductsPage}
-            totalResults={products?.length}
+            totalResults={products?.totalResults}
             pageSize={productsPageSize}
             onPageSizeChange={handleProductsPageSizeChange}
           />

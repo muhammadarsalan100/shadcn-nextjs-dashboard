@@ -132,10 +132,67 @@ export type Product = {
   }[];
 };
 
-// Get all products (admin endpoint - returns English translations, ordered by newest)
-export async function getProducts(): Promise<Product[]> {
-  const json = await apiClientJson<{ data: Product[] }>("/api/products/admin");
-  return json.data;
+export type GetProductsParams = {
+  page?: number;
+  limit?: number;
+};
+
+export type PaginatedProducts = {
+  data: Product[];
+  results: number;
+  totalResults: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+};
+
+function normalizePaginatedProducts(
+  json: Record<string, unknown>,
+  requestedPage: number,
+  requestedLimit: number
+): PaginatedProducts {
+  const data = Array.isArray(json.data) ? (json.data as Product[]) : [];
+  const page =
+    typeof json.page === "number" && json.page >= 1 ? json.page : requestedPage;
+  const limit =
+    typeof json.limit === "number" && json.limit >= 1 ? json.limit : requestedLimit;
+  const results =
+    typeof json.results === "number" && json.results >= 0
+      ? json.results
+      : data.length;
+  const totalResults =
+    typeof json.totalResults === "number" && json.totalResults >= 0
+      ? json.totalResults
+      : results;
+  const totalPages =
+    typeof json.totalPages === "number" && json.totalPages >= 1
+      ? json.totalPages
+      : Math.max(1, Math.ceil(totalResults / limit));
+
+  return {
+    data,
+    results,
+    totalResults,
+    totalPages,
+    page,
+    limit,
+  };
+}
+
+// Admin product list (paginated; same shape as /api/orders/admin)
+export async function getProducts(
+  params?: GetProductsParams
+): Promise<PaginatedProducts> {
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 20;
+  const query = new URLSearchParams();
+  query.set("page", String(page));
+  query.set("limit", String(limit));
+
+  const json = await apiClientJson<Record<string, unknown>>(
+    `/api/products/admin?${query.toString()}`
+  );
+  return normalizePaginatedProducts(json, page, limit);
 }
 
 // Full product details type (from admin endpoint)

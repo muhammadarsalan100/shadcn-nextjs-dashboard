@@ -10,7 +10,7 @@ import { Search, Plus, Filter } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRegions } from "@/lib/query/region/region.query";
 import { useCreateRegion, useDeleteRegion, useUpdateRegion } from "@/lib/query/region/region.mutation";
-import { Region } from "@/app/services/region";
+import { Region, UpdateRegionInput } from "@/app/services/region";
 import { DataTable } from "@/components/shared/data-table";
 import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/shared/pagination";
 import { regionColumns } from "@/components/regions/columns";
@@ -20,6 +20,7 @@ type RegionFormValues = {
   name: string;
   currencyCode: string;
   shippingAmount: number;
+  bhdToLocalRate: number;
   active: boolean;
 };
 
@@ -66,7 +67,8 @@ export default function RegionsPage() {
     reset({
       name: region.name,
       currencyCode: region.currencyCode,
-      shippingAmount: region.shippingAmount,
+      shippingAmount: Number(region.shippingAmount),
+      bhdToLocalRate: Number(region.bhdToLocalRate),
       active: region.active
     });
     setOpenForm(true);
@@ -78,36 +80,53 @@ export default function RegionsPage() {
       name: "",
       currencyCode: "",
       shippingAmount: 0,
+      bhdToLocalRate: 1,
       active: true
     });
     setOpenForm(true);
   };
 
   const onSubmit = (data: RegionFormValues) => {
+    const currencyCode = data.currencyCode.toUpperCase();
     if (currentRegion) {
-      // Update
+      const currentCurrencyCode = currentRegion.currencyCode.toUpperCase();
+      const currencyChanged = currencyCode !== currentCurrencyCode;
+      const updateData: UpdateRegionInput = {};
+
+      if (data.name !== currentRegion.name) updateData.name = data.name;
+      if (currencyChanged) {
+        updateData.currencyCode = currencyCode;
+        updateData.shippingAmount = Number(data.shippingAmount);
+        updateData.bhdToLocalRate = currencyCode === "BHD" ? 1 : Number(data.bhdToLocalRate);
+      } else {
+        if (Number(data.shippingAmount) !== Number(currentRegion.shippingAmount)) {
+          updateData.shippingAmount = Number(data.shippingAmount);
+        }
+        if (Number(data.bhdToLocalRate) !== Number(currentRegion.bhdToLocalRate)) {
+          updateData.bhdToLocalRate = currencyCode === "BHD" ? 1 : Number(data.bhdToLocalRate);
+        }
+      }
+      if (data.active !== currentRegion.active) updateData.active = data.active;
+
+      if (Object.keys(updateData).length === 0) {
+        setOpenForm(false);
+        return;
+      }
+
       updateMutation.mutate(
         {
           id: currentRegion.id,
-          data: {
-            name: data.name,
-            currencyCode: data.currencyCode,
-            shippingAmount: Number(data.shippingAmount),
-            timeZoneOffsetMinutes: currentRegion.timeZoneOffsetMinutes,
-            active: data.active
-          }
+          data: updateData
         },
         { onSuccess: () => setOpenForm(false) }
       );
     } else {
-      // Create
       createMutation.mutate(
         {
           name: data.name,
-          currencyCode: data.currencyCode,
+          currencyCode,
           shippingAmount: Number(data.shippingAmount),
-          timeZoneOffsetMinutes: 0,
-          active: data.active
+          ...(currencyCode === "BHD" ? {} : { bhdToLocalRate: Number(data.bhdToLocalRate) })
         },
         { onSuccess: () => setOpenForm(false) }
       );
@@ -225,7 +244,7 @@ export default function RegionsPage() {
                 {...register("currencyCode", { 
                   required: "Currency code is required",
                   pattern: {
-                    value: /^[A-Z]{3}$/,
+                    value: /^[A-Z]{3}$/i,
                     message: "Must be a 3-letter ISO currency code (e.g. PKR, USD)"
                   }
                 })}
@@ -240,7 +259,7 @@ export default function RegionsPage() {
               <label className="block font-medium">Shipping Amount</label>
               <Input
                 type="number"
-                step="0.01"
+                step="0.001"
                 {...register("shippingAmount", {
                   required: "Shipping amount is required",
                   valueAsNumber: true,
@@ -253,6 +272,30 @@ export default function RegionsPage() {
               />
               {errors.shippingAmount && (
                 <p className="text-red-500 text-sm">{errors.shippingAmount.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block font-medium">BHD to Local Rate</label>
+              <Input
+                type="number"
+                step="0.001"
+                {...register("bhdToLocalRate", {
+                  required: "Exchange rate is required",
+                  valueAsNumber: true,
+                  validate: (value) => {
+                    if (!Number.isFinite(value)) return "Enter a valid exchange rate";
+                    if (watch("currencyCode").toUpperCase() === "BHD") {
+                      return value === 1 || "BHD exchange rate must equal 1";
+                    }
+                    if (value <= 0) return "Exchange rate must be positive";
+                    return Number(value.toFixed(3)) === value || "Use no more than 3 decimal places";
+                  }
+                })}
+                placeholder="e.g. 9.728"
+              />
+              {errors.bhdToLocalRate && (
+                <p className="text-red-500 text-sm">{errors.bhdToLocalRate.message}</p>
               )}
             </div>
 

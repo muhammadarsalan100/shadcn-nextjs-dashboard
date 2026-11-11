@@ -7,6 +7,7 @@ import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/shared/pagination";
 import { orderColumns } from "@/components/orders/columns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ import {
   MapPin,
   Package,
   Phone,
+  Search,
   User,
 } from "lucide-react";
 import {
@@ -68,11 +70,22 @@ function formatOrderDate(iso: string): string {
 
 export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [searchBy, setSearchBy] = useState<
+    "orderNumber" | "customerName" | "customerEmail" | "customerPhone"
+  >("orderNumber");
+  const [pages, setPages] = useState({
+    needsAttention: 1,
+    active: 1,
+    closed: 1,
+  });
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { data: orders, isLoading, isError } = useOrders({
     ...(statusFilter === "all" ? {} : { status: statusFilter }),
-    page,
+    ...(search.trim() ? { search: search.trim(), searchBy } : {}),
+    attentionPage: pages.needsAttention,
+    activePage: pages.active,
+    closedPage: pages.closed,
     limit: pageSize,
   });
   const updateMutation = useUpdateOrder();
@@ -82,13 +95,31 @@ export default function OrdersPage() {
 
   const handleStatusFilterChange = (value: string) => {
     setStatusFilter(value);
-    setPage(1);
+    setPages({ needsAttention: 1, active: 1, closed: 1 });
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPages({ needsAttention: 1, active: 1, closed: 1 });
+  };
+
+  const handleGroupPageChange = (
+    group: keyof typeof pages,
+    page: number
+  ) => {
+    setPages((current) => ({ ...current, [group]: page }));
   };
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
-    setPage(1);
+    setPages({ needsAttention: 1, active: 1, closed: 1 });
   };
+
+  const orderGroups = [
+    { key: "needsAttention", label: "Needs attention" },
+    { key: "active", label: "Active" },
+    { key: "closed", label: "Closed" },
+  ] as const;
 
   const confirmDelete = () => {
     if (!orderToDelete) return;
@@ -110,43 +141,79 @@ export default function OrdersPage() {
           </p>
         </div>
 
-        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-          <SelectTrigger className="w-[220px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {ORDER_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {getOrderStatusLabel(s)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(event) => handleSearchChange(event.target.value)}
+              placeholder="Search orders..."
+              className="w-full pl-8 sm:w-[220px]"
+            />
+          </div>
+          <Select
+            value={searchBy}
+            onValueChange={(value) => {
+              setSearchBy(value as typeof searchBy);
+              setPages({ needsAttention: 1, active: 1, closed: 1 });
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-[170px]">
+              <SelectValue placeholder="Search by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="orderNumber">Order number</SelectItem>
+              <SelectItem value="customerName">Customer name</SelectItem>
+              <SelectItem value="customerEmail">Customer email</SelectItem>
+              <SelectItem value="customerPhone">Customer phone</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+            <SelectTrigger className="w-full sm:w-[220px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              {ORDER_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {getOrderStatusLabel(s)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Orders</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            data={orders?.data}
-            columns={orderColumns(updateMutation, setOrderToDelete, setOrderToView)}
-            isLoading={isLoading}
-            error={isError}
-            emptyMessage="No orders found"
-          />
-          <Pagination
-            page={orders?.page ?? page}
-            totalPages={orders?.totalPages ?? 1}
-            onPageChange={setPage}
-            totalResults={orders?.totalResults}
-            pageSize={pageSize}
-            onPageSizeChange={handlePageSizeChange}
-          />
-        </CardContent>
-      </Card>
+      {orderGroups.map(({ key, label }) => {
+        const group = orders?.[key];
+        return (
+          <Card key={key}>
+            <CardHeader>
+              <CardTitle>
+                {label}
+                {group ? ` (${group.totalResults})` : ""}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                data={group?.orders}
+                columns={orderColumns(updateMutation, setOrderToDelete, setOrderToView)}
+                isLoading={isLoading}
+                error={isError}
+                emptyMessage={`No ${label.toLowerCase()} orders found`}
+              />
+              <Pagination
+                page={group?.page ?? pages[key]}
+                totalPages={group?.totalPages ?? 1}
+                onPageChange={(nextPage) => handleGroupPageChange(key, nextPage)}
+                totalResults={group?.totalResults}
+                pageSize={pageSize}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </CardContent>
+          </Card>
+        );
+      })}
 
       <Dialog
         open={!!orderToDelete}
@@ -396,6 +463,19 @@ export default function OrdersPage() {
                     {formatOrderMoney(orderToView.totalAmount, orderToView.currency)}
                   </span>
                 </div>
+                {orderToView.localCurrency && orderToView.localTotalAmount != null && (
+                  <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      Local total snapshot
+                      {orderToView.bhdToLocalRate != null
+                        ? ` (rate ${orderToView.bhdToLocalRate})`
+                        : ""}
+                    </span>
+                    <span>
+                      {formatOrderMoney(orderToView.localTotalAmount, orderToView.localCurrency)}
+                    </span>
+                  </div>
+                )}
               </div>
             </>
           )}

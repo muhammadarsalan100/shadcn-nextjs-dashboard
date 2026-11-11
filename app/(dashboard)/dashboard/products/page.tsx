@@ -188,7 +188,6 @@ export default function ProductsPage() {
   } = useProducts({ page: productsPage, limit: productsPageSize });
   const { data: regions } = useRegions();
   const activeRegions = useMemo(() => (regions ?? []).filter((r) => r.active), [regions]);
-
   const handleProductsPageSizeChange = (size: number) => {
     setProductsPageSize(size);
     setProductsPage(1);
@@ -675,7 +674,7 @@ export default function ProductsPage() {
 
   const handleEditPriceClick = (price: ProductRegionPrice) => {
     setEditingPriceId(price.id);
-    setEditPriceValue(price.price);
+    setEditPriceValue(price.price.toFixed(3));
     setEditPriceActive(price.active);
   };
 
@@ -2418,10 +2417,10 @@ export default function ProductsPage() {
                                   </Select>
                                 </div>
                                 <div className="w-full sm:w-28 space-y-1">
-                                  <Label className="text-xs font-medium">Price</Label>
+                                  <Label className="text-xs font-medium">Price (BHD)</Label>
                                   <Input
                                     type="number"
-                                    step="0.01"
+                                    step="0.001"
                                     min="0"
                                     value={newEditSizePendingPrice}
                                     onChange={(e) => setNewEditSizePendingPrice(e.target.value)}
@@ -2631,12 +2630,12 @@ export default function ProductsPage() {
                                               {price.region.name}
                                             </div>
                                             <Badge variant="secondary" className="text-[10px] px-1.5">
-                                              {price.region.currencyCode}
+                                              {price.priceCurrency}
                                             </Badge>
                                           </div>
                                           <div className="flex items-center justify-between">
                                             <span className="text-lg font-semibold text-amber-600">
-                                              {price.region.currencyCode} {price.price}
+                                              {price.priceCurrency} {price.price.toFixed(3)}
                                             </span>
                                             {!price.active && (
                                               <Badge variant="outline" className="text-[10px]">
@@ -2693,10 +2692,10 @@ export default function ProductsPage() {
                                     </Select>
                                   </div>
                                   <div className="w-full sm:w-28 space-y-1">
-                                    <Label className="text-xs font-medium">Price</Label>
+                                    <Label className="text-xs font-medium">Price (BHD)</Label>
                                     <Input
                                       type="number"
-                                      step="0.01"
+                                      step="0.001"
                                       min="0"
                                       value={newPriceValue}
                                       onChange={(e) => setNewPriceValue(e.target.value)}

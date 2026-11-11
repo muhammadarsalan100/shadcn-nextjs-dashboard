@@ -13,7 +13,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const discount = Number(product.discountPercentage) || 0;
-  const originalPrice = parseFloat(product.price.replace(/[^0-9.]/g, ""));
+  const originalPrice = parseFloat(product.price?.replace(/[^0-9.]/g, "") ?? "0");
   const discountedPrice = discount > 0 
     ? originalPrice * (1 - discount / 100) 
     : originalPrice;

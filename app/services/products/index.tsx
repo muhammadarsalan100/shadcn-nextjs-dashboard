@@ -16,6 +16,50 @@ export type SizeRegionalPrice = {
   price: number;
 };
 
+export type AdminRegionalPrice = {
+  id: number;
+  price: string;
+  priceCurrency: string;
+  active: boolean;
+  region: {
+    id: number;
+    name: string;
+    currencyCode: string;
+  };
+};
+
+type AdminProductSize = {
+  id: number;
+  size: string;
+  stock: number;
+  regionalPrices: AdminRegionalPrice[];
+};
+
+type AdminRegion = {
+  id: number;
+  name: string;
+  currencyCode: string;
+};
+
+type AdminProductPromotion = {
+  id: number;
+  freeShipping: boolean;
+  welcomeDiscountPercentage: string;
+  welcomeOfferActive: boolean;
+  welcomeOfferStartAt: string | null;
+  welcomeOfferEndAt: string | null;
+  region: AdminRegion;
+};
+
+type AdminProductDiscount = {
+  id: number;
+  discountPercentage: string;
+  startDateTime: string;
+  endDateTime: string;
+  active: boolean;
+  region: Pick<AdminRegion, "id" | "name">;
+};
+
 export type ProductSize = {
   size: string | null;
   stock: number;
@@ -119,17 +163,15 @@ export type Product = {
   id: number;
   title: string | null;
   description: string | null;
-  price: string;
-  discountPercentage: string;
+  price?: string;
+  discountPercentage?: string;
+  thumbnailUrl: string | null;
   sortOrder: number | null;
+  sizes: AdminProductSize[];
+  regionPromotions: AdminProductPromotion[];
+  regionalDiscounts: AdminProductDiscount[];
   inStock: boolean;
   active: boolean;
-  thumbnailUrl?: string;
-  sizes?: {
-    id: number;
-    size: string;
-    stock: number;
-  }[];
 };
 
 export type GetProductsParams = {
@@ -145,6 +187,8 @@ export type PaginatedProducts = {
   page: number;
   limit: number;
 };
+
+export type AdminProductsResponse = PaginatedProducts;
 
 function normalizePaginatedProducts(
   json: Record<string, unknown>,
@@ -179,7 +223,7 @@ function normalizePaginatedProducts(
   };
 }
 
-// Admin product list (paginated; same shape as /api/orders/admin)
+// Admin product list (paginated)
 export async function getProducts(
   params?: GetProductsParams
 ): Promise<PaginatedProducts> {
@@ -199,16 +243,11 @@ export async function getProducts(
 export type ProductDetails = {
   id: number;
   perfumeType: "male" | "female" | "unisex" | null;
-  discountPercentage: string;
   sortOrder: number | null;
   thumbnailUrl: string | null;
-  thumbnailPublicId: string | null;
   image1Url: string | null;
-  image1PublicId: string | null;
   image2Url: string | null;
-  image2PublicId: string | null;
   image3Url: string | null;
-  image3PublicId: string | null;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -219,6 +258,7 @@ export type ProductDetails = {
     category: {
       id: number;
       name: string;
+      imageUrl: string | null;
     };
     language: {
       id: number;
@@ -226,11 +266,9 @@ export type ProductDetails = {
       code: string;
     };
   }[];
-  sizes: {
-    id: number;
-    size: string;
-    stock: number;
-  }[];
+  sizes: AdminProductSize[];
+  regionPromotions: AdminProductPromotion[];
+  regionalDiscounts: AdminProductDiscount[];
 };
 
 // Get single product by ID (admin endpoint with full details)

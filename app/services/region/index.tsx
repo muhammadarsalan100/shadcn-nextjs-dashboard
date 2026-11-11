@@ -1,12 +1,16 @@
 import { apiClientJson } from "@/lib/api-client";
 
-// Region types
+export type RegionSummary = {
+  id: number;
+  name: string;
+};
+
 export type Region = {
   id: number;
   name: string;
   currencyCode: string;
-  shippingAmount: number;
-  timeZoneOffsetMinutes: number;
+  shippingAmount: string;
+  bhdToLocalRate: string;
   active: boolean;
 };
 
@@ -14,19 +18,26 @@ export type CreateRegionInput = {
   name: string;
   currencyCode: string;
   shippingAmount: number;
-  timeZoneOffsetMinutes: number;
-  active?: boolean;
+  bhdToLocalRate?: number;
 };
 
 export type UpdateRegionInput = {
   name?: string;
   currencyCode?: string;
   shippingAmount?: number;
-  timeZoneOffsetMinutes?: number;
+  bhdToLocalRate?: number;
   active?: boolean;
 };
 
-// Get all regions (admin)
+// Public region list only includes active regions.
+export async function getActiveRegions(): Promise<RegionSummary[]> {
+  const json = await apiClientJson<{ data: RegionSummary[] }>("/api/regions", {
+    skipAuth: true,
+  });
+  return json.data;
+}
+
+// Admin region list includes active and inactive regions.
 export async function getRegions(): Promise<Region[]> {
   const json = await apiClientJson<{ data: Region[] }>("/api/regions?admin=true");
   return json.data;
@@ -40,20 +51,20 @@ export async function getRegionById(id: number): Promise<Region> {
 
 // Create region
 export async function createRegion(data: CreateRegionInput): Promise<Region> {
-  const json = await apiClientJson<{ data: Region }>("/api/regions", {
+  const json = await apiClientJson<{ data: { region: Region } }>("/api/regions", {
     method: "POST",
     body: JSON.stringify(data),
   });
-  return json.data;
+  return json.data.region;
 }
 
 // Update region
 export async function updateRegion(id: number, data: UpdateRegionInput): Promise<Region> {
-  const json = await apiClientJson<{ data: Region }>(`/api/regions/${id}`, {
+  const json = await apiClientJson<{ data: { region: Region } }>(`/api/regions/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
-  return json.data;
+  return json.data.region;
 }
 
 // Delete region

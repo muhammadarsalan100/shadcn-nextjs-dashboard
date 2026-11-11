@@ -2,7 +2,7 @@ import {
   getProducts,
   getProduct,
   type GetProductsParams,
-  type PaginatedProducts,
+  type AdminProductsResponse,
   type ProductDetails,
 } from "@/app/services/products";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ export function useProducts(params?: GetProductsParams) {
   const page = params?.page ?? 1;
   const limit = params?.limit ?? 20;
 
-  return useQuery<PaginatedProducts>({
+  return useQuery<AdminProductsResponse>({
     queryKey: ["products", page, limit],
     queryFn: () => getProducts({ page, limit }),
     placeholderData: keepPreviousData,
